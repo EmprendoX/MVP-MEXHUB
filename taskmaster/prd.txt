@@ -1,0 +1,165 @@
+
+
+📘 PRODUCT REQUIREMENTS DOCUMENT (PRD)
+Hecho en México Connect – MVP v1.0
+
+1. Visión General
+Propósito del MVP:
+Construir la primera versión funcional de HUBMEX.COM, un directorio digital que conecta a fabricantes, proveedores de servicios y emprendedores dentro del ecosistema de manufactura mexicana.
+El MVP debe permitir que:
+	• Los proveedores creen cuentas, publiquen sus productos o servicios y reciban mensajes.
+	• Los compradores o emprendedores puedan explorar, filtrar y contactar proveedores fácilmente.
+Meta:
+Validar la adopción inicial, medir las interacciones (publicaciones y contactos) y preparar la base tecnológica para el desarrollo posterior de funciones más avanzadas (RFQs, IA, logística, etc.).
+
+2. Objetivos del Producto
+	• Lanzar un directorio funcional y atractivo en menos de 60 días.
+	• Permitir publicación y búsqueda efectiva de productos y servicios.
+	• Crear una base de datos validada de fabricantes y proveedores mexicanos.
+	• Medir las primeras métricas de conexión y engagement.
+
+3. Público Objetivo
+Segmento	Descripción	Objetivo dentro de la App
+Proveedores / Fabricantes	Empresas o talleres en México que producen bienes o prestan servicios industriales.	Publicar productos/servicios y recibir clientes.
+Emprendedores / Compradores	Personas o negocios (principalmente en México y EE.UU.) que buscan fabricar o comprar productos hechos en México.	Explorar el directorio y contactar proveedores.
+Freelancers / Especialistas	Expertos en logística, marketing, diseño, aduanas, etc.	Ofrecer servicios profesionales.
+
+4. Alcance del MVP
+Incluido
+	• Sistema de usuarios (registro/login).
+	• Perfiles de proveedor y comprador.
+	• Publicación y visualización de productos y servicios.
+	• Búsqueda y filtros por categoría, tipo y ubicación.
+	• Mensajería interna básica entre usuarios.
+	• Dashboard de gestión para cada usuario.
+	• Backend y base de datos funcional con Supabase.
+	• Diseño web responsive.
+Excluido (para fases posteriores)
+	• IA de recomendación.
+	• Cotizaciones automáticas (RFQ).
+	• Verificación automática de empresas.
+	• Pasarelas de pago o comisiones.
+	• Integraciones logísticas o fulfillment.
+
+5. Funcionalidades Principales
+5.1 Registro y Perfiles
+	• Registro con email / contraseña (opcional: Google login).
+	• Selección de tipo de usuario: Proveedor / Comprador / Freelancer.
+	• Perfil editable con:
+		○ Logo o imagen de perfil.
+		○ Nombre de empresa o profesional.
+		○ Descripción breve.
+		○ Ubicación (estado, ciudad).
+		○ Categorías / industria.
+		○ Datos de contacto.
+5.2 Publicación de Productos / Servicios
+	• Formulario simple con:
+		○ Nombre del producto o servicio.
+		○ Descripción.
+		○ Imágenes (hasta 5).
+		○ Categoría y subcategoría.
+		○ Precio aproximado o rango.
+		○ Tiempo de entrega estimado.
+		○ Capacidad / MOQs (si aplica).
+	• Publicaciones visibles en el directorio general.
+5.3 Exploración y Búsqueda
+	• Página “Explorar” con:
+		○ Filtros por categoría, ubicación, tipo (producto o servicio).
+		○ Barra de búsqueda global por palabras clave.
+	• Vista tipo cuadrícula (grid) con:
+		○ Imagen principal.
+		○ Título, proveedor y ubicación.
+		○ Botón de “Ver perfil / Contactar”.
+5.4 Contacto y Mensajería
+	• Sistema de mensajes 1 a 1 dentro de la app.
+	• Notificación por email cuando llega un mensaje nuevo.
+	• Historial básico de conversación.
+5.5 Panel de Usuario (Dashboard)
+	• Ver y editar perfil.
+	• Crear, editar o eliminar publicaciones.
+	• Revisar mensajes.
+	• Ver estadísticas básicas: visitas y contactos.
+
+6. Diseño UX/UI
+Estilo visual:
+	• Minimalista, limpio, profesional.
+	• Paleta “Hecho en México”: blanco, verde, dorado y gris claro.
+	• Layout tipo marketplace B2B (inspirado en Alibaba / Fiverr).
+	• Mobile-first y 100% responsive.
+Componentes clave:
+	• Navbar con: Inicio | Explorar | Publicar | Mensajes | Mi Cuenta.
+	• Hero inicial con llamada a la acción: “Descubre fabricantes y servicios de México para el mundo.”
+	• Cards modulares con bordes redondeados y sombras suaves.
+
+7. Arquitectura Técnica
+Capa	Tecnología	Descripción
+Frontend	React + Next.js + TailwindCSS	UI web responsiva y rápida.
+Backend / DB	Supabase	Autenticación, CRUD, storage e inbox.
+Storage	Supabase Storage o AWS S3	Imágenes de productos.
+Hosting	Vercel / Netlify	Despliegue del frontend.
+Email Notifs	Supabase Functions o Resend API	Alertas automáticas por email.
+
+8. Base de Datos (Tablas Principales)
+users
+Campo	Tipo	Descripción
+id	UUID	Identificador único
+nombre	text	Nombre / Empresa
+email	text	Correo
+tipo	enum('proveedor', 'comprador', 'freelancer')	Tipo de usuario
+ubicacion	text	Ciudad / Estado
+descripcion	text	Descripción breve
+avatar_url	text	Imagen de perfil
+created_at	timestamp	Fecha de registro
+listings
+Campo	Tipo	Descripción
+id	UUID	Identificador único
+user_id	UUID	Relación con usuario
+titulo	text	Nombre del producto o servicio
+descripcion	text	Descripción
+categoria	text	Categoría
+tipo	enum('producto', 'servicio')	Tipo de publicación
+precio	numeric	Precio o rango
+ubicacion	text	Ciudad / Estado
+imagenes	array	URLs de imágenes
+created_at	timestamp	Fecha de publicación
+messages
+Campo	Tipo	Descripción
+id	UUID	Identificador
+sender_id	UUID	Remitente
+receiver_id	UUID	Destinatario
+contenido	text	Texto del mensaje
+created_at	timestamp	Fecha
+
+9. Métricas de Éxito (KPIs MVP)
+Métrica	Descripción	Meta inicial
+Usuarios activos	Cuentas registradas con publicaciones activas	500 en 60 días
+Publicaciones activas	Productos o servicios listados	1,000
+Conexiones generadas	Mensajes enviados / contactos realizados	200+
+Tasa de retención semanal	Usuarios que regresan al menos una vez por semana	> 35%
+Feedback positivo	Encuestas o NPS básico	> 8/10
+
+10. Estrategia de Lanzamiento
+Fase 1 – Prueba cerrada (semana 1–4):
+	• Invitar a fabricantes conocidos y contactos de The Product Lab.
+	• Crear 50 perfiles iniciales de ejemplo.
+Fase 2 – Apertura pública (semana 5–8):
+	• Lanzamiento web oficial con registro libre.
+	• Campañas en redes y grupos de emprendedores.
+	• Alianzas con cámaras industriales mexicanas.
+Fase 3 – Optimización (semana 9–12):
+	• Añadir métricas internas y mejoras UX.
+	• Preparar integración IA para versión 2.0.
+
+11. Riesgos y Mitigaciones
+Riesgo	Mitigación
+Pocos proveedores iniciales	Cargar manualmente catálogos verificados de fabricantes mexicanos.
+Publicaciones falsas o spam	Revisión manual inicial y verificación por correo.
+Baja adopción	Campañas en redes sociales y colaboración con clusters industriales.
+Escalabilidad del backend	Uso de Supabase y hosting escalable.
+
+12. Futuras Iteraciones
+	• IA de búsqueda inteligente.
+	• Sistema de cotizaciones (RFQ).
+	• Integración de logística y fulfillment.
+	• Verificación KYC y certificaciones automáticas.
+	• Marketplace B2B con pagos y contratos.

@@ -1,0 +1,199 @@
+# 🗺️ ROADMAP - HUBMEX.COM MVP v1.0
+# Fecha de creación: 2025-01-27
+# Proyecto: Hecho en México Connect - MVP
+# Tecnologías: React + Next.js + TailwindCSS + Supabase
+
+─────────────────────────────────────────────
+📋 ESTADO GENERAL DEL PROYECTO
+─────────────────────────────────────────────
+Progreso Total: 0/15 tareas completadas (0%)
+Estado: INICIALIZACIÓN
+Última actualización: 2025-01-27
+
+─────────────────────────────────────────────
+🏗️ FASE 1: CONFIGURACIÓN BASE
+─────────────────────────────────────────────
+
+[TASK-01] ⏳ CONFIGURAR PROYECTO NEXT.JS
+├─ Estado: PENDIENTE
+├─ Descripción: Configurar proyecto Next.js con TypeScript y TailwindCSS
+├─ Archivos afectados: package.json, next.config.js, tailwind.config.js, tsconfig.json
+├─ Dependencias: next, react, typescript, tailwindcss, @types/react
+├─ Resultado esperado: Proyecto Next.js funcional con TypeScript y TailwindCSS
+└─ Dependencias: Ninguna
+
+[TASK-02] ⏳ CONFIGURAR SUPABASE
+├─ Estado: PENDIENTE
+├─ Descripción: Configurar Supabase (cliente, tipos, autenticación)
+├─ Archivos afectados: lib/supabaseClient.ts, types/supabase.ts, .env.local
+├─ Dependencias: @supabase/supabase-js, @supabase/cli
+├─ Resultado esperado: Cliente Supabase configurado con tipos TypeScript
+└─ Dependencias: TASK-01
+
+[TASK-03] ⏳ CREAR ESQUEMA DE BASE DE DATOS
+├─ Estado: PENDIENTE
+├─ Descripción: Crear esquema de base de datos (users, listings, messages)
+├─ Archivos afectados: supabase/migrations/, schema.sql
+├─ Dependencias: Ninguna
+├─ Resultado esperado: Tablas users, listings, messages creadas en Supabase
+└─ Dependencias: TASK-02
+
+─────────────────────────────────────────────
+🔐 FASE 2: AUTENTICACIÓN Y COMPONENTES
+─────────────────────────────────────────────
+
+[TASK-04] ⏳ IMPLEMENTAR SISTEMA DE AUTENTICACIÓN
+├─ Estado: PENDIENTE
+├─ Descripción: Implementar sistema de autenticación (registro/login)
+├─ Archivos afectados: components/AuthForm.tsx, pages/auth/, hooks/useAuth.ts
+├─ Dependencias: @supabase/auth-helpers-nextjs
+├─ Resultado esperado: Registro y login funcionales con Supabase Auth
+└─ Dependencias: TASK-02, TASK-03
+
+[TASK-05] ⏳ CREAR COMPONENTES BASE
+├─ Estado: PENDIENTE
+├─ Descripción: Crear componentes base (Navbar, Hero, CardItem, Filters, Footer)
+├─ Archivos afectados: components/Navbar.tsx, components/Hero.tsx, components/CardItem.tsx, components/Filters.tsx, components/Footer.tsx
+├─ Dependencias: Ninguna
+├─ Resultado esperado: Componentes UI base con diseño responsive
+└─ Dependencias: TASK-01
+
+─────────────────────────────────────────────
+📱 FASE 3: PÁGINAS PRINCIPALES
+─────────────────────────────────────────────
+
+[TASK-06] ⏳ IMPLEMENTAR PÁGINAS PRINCIPALES
+├─ Estado: PENDIENTE
+├─ Descripción: Implementar páginas principales (index, explore, publish, dashboard, messages)
+├─ Archivos afectados: pages/index.tsx, pages/explore.tsx, pages/publish.tsx, pages/dashboard.tsx, pages/messages.tsx, pages/profile/[id].tsx
+├─ Dependencias: Ninguna
+├─ Resultado esperado: Todas las páginas principales navegables
+└─ Dependencias: TASK-05
+
+[TASK-07] ⏳ CREAR HOOKS PERSONALIZADOS
+├─ Estado: PENDIENTE
+├─ Descripción: Crear hooks personalizados (useAuth, useListings, useMessages)
+├─ Archivos afectados: hooks/useAuth.ts, hooks/useListings.ts, hooks/useMessages.ts
+├─ Dependencias: Ninguna
+├─ Resultado esperado: Hooks para manejo de estado y API calls
+└─ Dependencias: TASK-02, TASK-04
+
+─────────────────────────────────────────────
+⚙️ FASE 4: FUNCIONALIDADES CORE
+─────────────────────────────────────────────
+
+[TASK-08] ⏳ IMPLEMENTAR CRUD DE PUBLICACIONES
+├─ Estado: PENDIENTE
+├─ Descripción: Implementar CRUD de publicaciones (productos/servicios)
+├─ Archivos afectados: lib/api/listings.ts, components/ListingForm.tsx, components/ListingCard.tsx
+├─ Dependencias: Ninguna
+├─ Resultado esperado: Crear, leer, actualizar y eliminar publicaciones
+└─ Dependencias: TASK-03, TASK-07
+
+[TASK-09] ⏳ IMPLEMENTAR SISTEMA DE MENSAJERÍA
+├─ Estado: PENDIENTE
+├─ Descripción: Implementar sistema de mensajería 1:1
+├─ Archivos afectados: lib/api/messages.ts, components/MessageForm.tsx, components/MessageList.tsx
+├─ Dependencias: Ninguna
+├─ Resultado esperado: Mensajería interna funcional entre usuarios
+└─ Dependencias: TASK-03, TASK-07
+
+[TASK-10] ⏳ CREAR DASHBOARD DE USUARIO
+├─ Estado: PENDIENTE
+├─ Descripción: Crear dashboard de usuario con estadísticas
+├─ Archivos afectados: components/DashboardStats.tsx, components/UserProfile.tsx
+├─ Dependencias: Ninguna
+├─ Resultado esperado: Dashboard con estadísticas de visitas y contactos
+└─ Dependencias: TASK-06, TASK-08, TASK-09
+
+[TASK-11] ⏳ IMPLEMENTAR BÚSQUEDA Y FILTROS
+├─ Estado: PENDIENTE
+├─ Descripción: Implementar búsqueda y filtros avanzados
+├─ Archivos afectados: components/SearchBar.tsx, components/FilterPanel.tsx, lib/api/search.ts
+├─ Dependencias: Ninguna
+├─ Resultado esperado: Búsqueda por palabras clave y filtros por categoría/ubicación
+└─ Dependencias: TASK-08
+
+─────────────────────────────────────────────
+🚀 FASE 5: OPTIMIZACIÓN Y DEPLOYMENT
+─────────────────────────────────────────────
+
+[TASK-12] ⏳ CONFIGURAR NOTIFICACIONES POR EMAIL
+├─ Estado: PENDIENTE
+├─ Descripción: Configurar sistema de notificaciones por email
+├─ Archivos afectados: lib/email.ts, supabase/functions/send-email/
+├─ Dependencias: resend, @supabase/functions-js
+├─ Resultado esperado: Notificaciones automáticas por email
+└─ Dependencias: TASK-09
+
+[TASK-13] ⏳ OPTIMIZAR DISEÑO RESPONSIVE
+├─ Estado: PENDIENTE
+├─ Descripción: Optimizar diseño responsive y accesibilidad
+├─ Archivos afectados: styles/globals.css, todos los componentes
+├─ Dependencias: Ninguna
+├─ Resultado esperado: Diseño 100% responsive y accesible
+└─ Dependencias: TASK-05, TASK-06
+
+[TASK-14] ⏳ CONFIGURAR DEPLOYMENT EN VERCEL
+├─ Estado: PENDIENTE
+├─ Descripción: Configurar deployment en Vercel
+├─ Archivos afectados: vercel.json, .env.production
+├─ Dependencias: vercel
+├─ Resultado esperado: Aplicación desplegada y funcionando en producción
+└─ Dependencias: TASK-01, TASK-02
+
+[TASK-15] ⏳ CREAR DOCUMENTACIÓN TÉCNICA
+├─ Estado: PENDIENTE
+├─ Descripción: Crear documentación técnica (README.md)
+├─ Archivos afectados: README.md, docs/
+├─ Dependencias: Ninguna
+├─ Resultado esperado: Documentación completa del proyecto
+└─ Dependencias: Todas las anteriores
+
+─────────────────────────────────────────────
+📊 MÉTRICAS DE PROGRESO
+─────────────────────────────────────────────
+
+Tareas Completadas: 0/15
+Tareas En Progreso: 1/15
+Tareas Pendientes: 14/15
+
+Por Fase:
+├─ Fase 1 (Configuración): 0/3 completadas
+├─ Fase 2 (Auth + Componentes): 0/2 completadas  
+├─ Fase 3 (Páginas): 0/2 completadas
+├─ Fase 4 (Core Features): 0/4 completadas
+└─ Fase 5 (Optimización): 0/4 completadas
+
+─────────────────────────────────────────────
+🎯 PRÓXIMOS PASOS RECOMENDADOS
+─────────────────────────────────────────────
+
+1. Comenzar con TASK-01: Configurar proyecto Next.js
+2. Una vez completado, proceder con TASK-02: Configurar Supabase
+3. Seguir con TASK-03: Crear esquema de base de datos
+
+─────────────────────────────────────────────
+📝 NOTAS IMPORTANTES
+─────────────────────────────────────────────
+
+- Seguir estrictamente las reglas establecidas en rules.txt
+- Validar esquema de base de datos antes de generar código
+- No ejecutar acciones sin aprobación previa del usuario
+- Mantener consistencia con el PRD en todo momento
+- Actualizar este roadmap después de cada tarea completada
+
+─────────────────────────────────────────────
+🔗 REFERENCIAS
+─────────────────────────────────────────────
+
+- PRD: taskmaster/prd.txt
+- Reglas: rules.txt  
+- Instrucciones de construcción: taskmaster/building_in.txt
+- Configuración MCP: taskmaster/mcp.json
+
+─────────────────────────────────────────────
+📅 HISTORIAL DE CAMBIOS
+─────────────────────────────────────────────
+
+2025-01-27 - Creación inicial del roadmap con 15 tareas identificadas

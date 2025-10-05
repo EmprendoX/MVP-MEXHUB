@@ -1,0 +1,121 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Estilos base para HUBMEX.COM */
+@layer base {
+  html {
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+  
+  body {
+    @apply bg-dark-500 text-text-light antialiased;
+  }
+  
+  * {
+    @apply border-gray-light;
+  }
+}
+
+/* Componentes personalizados */
+@layer components {
+  .btn-primary {
+    @apply bg-primary hover:bg-primary-600 text-dark font-medium py-2 px-4 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2;
+  }
+  
+  .btn-secondary {
+    @apply bg-light-bg hover:bg-gray-light text-text-light font-medium py-2 px-4 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2;
+  }
+  
+  .btn-outline {
+    @apply border-2 border-primary text-primary hover:bg-primary hover:text-dark font-medium py-2 px-4 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2;
+  }
+  
+  .btn-success {
+    @apply bg-success hover:bg-green-500 text-dark font-medium py-2 px-4 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-success focus:ring-offset-2;
+  }
+  
+  .btn-alert {
+    @apply bg-alert hover:bg-red-600 text-text-light font-medium py-2 px-4 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-alert focus:ring-offset-2;
+  }
+  
+  .card {
+    @apply bg-light-bg rounded-xl shadow-soft border border-gray-light p-6;
+  }
+  
+  .card-hover {
+    @apply card hover:shadow-card transition-shadow duration-300 cursor-pointer;
+  }
+  
+  .input-field {
+    @apply w-full px-3 py-2 border border-gray-light rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200 bg-light-bg text-text-light placeholder-text-soft;
+  }
+  
+  .textarea-field {
+    @apply input-field resize-none;
+  }
+  
+  .select-field {
+    @apply input-field appearance-none bg-light-bg;
+  }
+}
+
+/* Utilidades personalizadas */
+@layer utilities {
+  .text-gradient {
+    @apply bg-gradient-to-r from-primary to-success bg-clip-text text-transparent;
+  }
+  
+  .bg-gradient-hubmex {
+    @apply bg-gradient-to-br from-primary via-primary-600 to-success;
+  }
+  
+  .shadow-hubmex {
+    box-shadow: 0 10px 25px -5px rgba(0, 200, 240, 0.1), 0 10px 10px -5px rgba(0, 200, 240, 0.04);
+  }
+}
+
+/* Animaciones personalizadas */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+/* Responsive breakpoints personalizados */
+@media (max-width: 640px) {
+  .container {
+    @apply px-4;
+  }
+}
+
+/* Estados de carga */
+.loading-skeleton {
+  @apply animate-pulse bg-gray-200 rounded;
+}
+
+/* Scrollbar personalizado */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-gray-100;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-primary rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-primary-600;
+}

@@ -1,0 +1,194 @@
+# SYSTEM INSTRUCTION – HUBMEX.COM (MVP Build 1.0)
+# Fecha: 2025-10-04
+# Rol: Codex / AI Developer Agent
+# Entorno: Cursor IDE + TaskMaster AI
+# Objetivo: Generar y estructurar el código base del MVP según el PRD aprobado.
+
+─────────────────────────────────────────────
+🧭 CONTEXTO GENERAL
+─────────────────────────────────────────────
+Estás desarrollando el MVP de HUBMEX.COM, una plataforma B2B que conecta fabricantes, proveedores y emprendedores dentro del ecosistema de manufactura mexicana.  
+El proyecto está basado en el PRD “Hecho en México Connect – MVP v1.0” y debe incluir:  
+- Autenticación (Supabase)
+- Perfiles de usuarios (proveedor, comprador, freelancer)
+- Publicación de productos/servicios
+- Búsqueda y filtrado
+- Mensajería 1:1
+- Dashboard básico
+- Diseño responsive limpio (tipo Alibaba/Fiverr)
+- Arquitectura moderna y segura.
+
+─────────────────────────────────────────────
+🧱 ARQUITECTURA TÉCNICA
+─────────────────────────────────────────────
+- **Frontend:** React + Next.js + TailwindCSS
+- **Backend:** Supabase (DB + Auth + Storage)
+- **Hosting:** Vercel
+- **Email:** Supabase Functions / Resend API (solo placeholders)
+- **DB:** Postgres (a través de Supabase)
+- **Infra:** Arquitectura modular, código limpio, ESLint + Prettier.
+
+─────────────────────────────────────────────
+📂 ESTRUCTURA DE CARPETAS REQUERIDA
+─────────────────────────────────────────────
+src/
+ ├─ components/
+ │   ├─ Navbar.tsx
+ │   ├─ Hero.tsx
+ │   ├─ CardItem.tsx
+ │   ├─ Filters.tsx
+ │   └─ Footer.tsx
+ ├─ pages/
+ │   ├─ index.tsx                # Página principal
+ │   ├─ explore.tsx              # Búsqueda
+ │   ├─ publish.tsx              # Crear publicación
+ │   ├─ dashboard.tsx            # Panel del usuario
+ │   ├─ messages.tsx             # Mensajería 1:1
+ │   └─ profile/[id].tsx         # Perfil público
+ ├─ lib/
+ │   ├─ supabaseClient.ts        # Inicialización segura
+ │   ├─ api/
+ │   │   ├─ listings.ts          # CRUD de publicaciones
+ │   │   ├─ users.ts             # CRUD de usuarios
+ │   │   └─ messages.ts          # CRUD de mensajes
+ │   └─ hooks/
+ │       ├─ useAuth.ts
+ │       ├─ useListings.ts
+ │       └─ useMessages.ts
+ ├─ styles/
+ │   └─ globals.css
+ ├─ types/
+ │   └─ supabase.ts              # Generado automáticamente
+ └─ utils/
+     ├─ formatDate.ts
+     ├─ constants.ts
+     └─ validations.ts
+
+public/
+ ├─ logo.svg
+ ├─ placeholder.jpg
+ └─ favicon.ico
+
+─────────────────────────────────────────────
+🧮 BASE DE DATOS SUPABASE (SQL)
+─────────────────────────────────────────────
+Crea exactamente estas tablas con tipos, relaciones y restricciones:
+
+users (
+  id uuid primary key default uuid_generate_v4(),
+  nombre text,
+  email text unique not null,
+  tipo text check (tipo in ('proveedor', 'comprador', 'freelancer')),
+  ubicacion text,
+  descripcion text,
+  avatar_url text,
+  created_at timestamp default now()
+);
+
+listings (
+  id uuid primary key default uuid_generate_v4(),
+  user_id uuid references users(id) on delete cascade,
+  titulo text not null,
+  descripcion text,
+  categoria text,
+  tipo text check (tipo in ('producto', 'servicio')),
+  precio numeric,
+  ubicacion text,
+  imagenes text[],
+  created_at timestamp default now()
+);
+
+messages (
+  id uuid primary key default uuid_generate_v4(),
+  sender_id uuid references users(id) on delete cascade,
+  receiver_id uuid references users(id) on delete cascade,
+  contenido text not null,
+  created_at timestamp default now()
+);
+
+─────────────────────────────────────────────
+🔒 POLÍTICA DE VALIDACIÓN DE CÓDIGO Y BASE DE DATOS
+─────────────────────────────────────────────
+Antes de generar o modificar código que interactúe con la base de datos:
+1. **Verifica las tablas y columnas reales en Supabase.**
+2. **No inventes campos ni cambies nombres.**
+3. **Usa los tipos exactos definidos en schema.sql.**
+4. Si algo no coincide → muestra un diff y espera confirmación.
+
+Ejemplo:
+✅ Correcto:
+  supabase.from('listings').select('id, titulo, categoria, precio');
+🚫 Incorrecto:
+  supabase.from('products').select('*');  ← “products” no existe.
+
+─────────────────────────────────────────────
+🎨 UI / UX
+─────────────────────────────────────────────
+- TailwindCSS con layout limpio, profesional y adaptable.
+- Colores: blanco, verde (#1E8543), dorado (#D6B26C), gris claro (#F4F4F4).
+- Cards con sombras suaves y bordes redondeados.
+- Diseño responsive (desktop, tablet, móvil).
+- Inspiración: Alibaba, MadeInMexico, Fiverr.
+- Componentes reutilizables y accesibles (alt text, labels, etc.).
+
+─────────────────────────────────────────────
+📬 FUNCIONALIDADES PRIORITARIAS (MVP)
+─────────────────────────────────────────────
+1. Registro / login con Supabase Auth.
+2. Perfiles de usuario editables.
+3. CRUD de publicaciones (productos / servicios).
+4. Página de exploración con filtros.
+5. Mensajería interna básica.
+6. Dashboard de usuario (publicaciones + mensajes).
+7. Email notification placeholder.
+
+─────────────────────────────────────────────
+🧠 INSTRUCCIONES ESPECÍFICAS PARA CODEX
+─────────────────────────────────────────────
+✅ Antes de generar código:
+   - Leer `schema.sql` y confirmar que los tipos coinciden.
+   - Analizar el PRD completo.
+   - Mostrar resumen de la estructura que planea crear.
+
+✅ Durante la generación:
+   - Crear componentes funcionales y modulares.
+   - Seguir las convenciones de nombres y rutas.
+   - Añadir comentarios en los archivos principales con propósito, inputs y outputs.
+   - No crear archivos temporales ni duplicados.
+   - Incluir importaciones correctas y seguras.
+
+✅ Después de generar:
+   - Mostrar un **informe de estructura creada** (carpetas, archivos, dependencias).
+   - Indicar cómo correr el proyecto (`npm run dev`) y credenciales necesarias.
+
+─────────────────────────────────────────────
+🚫 RESTRICCIONES
+─────────────────────────────────────────────
+- No ejecutar migraciones automáticas.
+- No sobrescribir archivos existentes.
+- No usar dependencias no listadas sin aprobación.
+- No generar datos falsos ni placeholders innecesarios.
+- No crear componentes sin referencia en el PRD.
+
+─────────────────────────────────────────────
+📊 MÉTRICAS DE ENTREGA
+─────────────────────────────────────────────
+- Carpeta del proyecto generada correctamente.
+- Build sin errores (`npm run build` OK).
+- Lint y TypeScript pasan (`npm run lint` OK).
+- Conexión Supabase funcional (auth + CRUD).
+- UI navegable (index, explore, publish, dashboard, messages).
+
+─────────────────────────────────────────────
+💬 MENSAJE FINAL A CODEX
+─────────────────────────────────────────────
+Ahora genera el **proyecto completo de HUBMEX.COM** siguiendo este PRD.  
+Valida el esquema Supabase antes de escribir código.  
+No ejecutes acciones no verificadas.  
+Construye el proyecto modular, limpio y listo para despliegue en Vercel.
+
+# Output esperado:
+- Archivos de código fuente (React + Next.js).
+- Script SQL para Supabase.
+- Documentación técnica (README.md).
+- Reporte de estructura creada.
