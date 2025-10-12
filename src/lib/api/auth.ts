@@ -284,12 +284,12 @@ export async function updateUserProfile(
  * @param userId ID del usuario
  * @returns Perfil del usuario o null
  */
-export async function getUserProfile(userId: string) {
+export async function getUserProfile(userEmail: string) {
   try {
     const { data, error } = await supabase
       .from('users')
       .select('*')
-      .eq('id', userId)
+      .eq('email', userEmail)
       .single();
 
     if (error) {
@@ -300,32 +300,6 @@ export async function getUserProfile(userId: string) {
     return data;
   } catch (error: any) {
     console.error('❌ Error inesperado en getUserProfile:', error);
-    return null;
-  }
-}
-
-/**
- * Obtener perfil de usuario por email desde public.users
- * 
- * @param email Email del usuario
- * @returns Perfil del usuario o null
- */
-export async function getUserProfileByEmail(email: string) {
-  try {
-    const { data, error } = await supabase
-      .from('users')
-      .select('*')
-      .eq('email', email)
-      .single();
-
-    if (error) {
-      console.error('❌ Error obteniendo perfil por email:', error.message);
-      return null;
-    }
-
-    return data;
-  } catch (error: any) {
-    console.error('❌ Error inesperado en getUserProfileByEmail:', error);
     return null;
   }
 }
