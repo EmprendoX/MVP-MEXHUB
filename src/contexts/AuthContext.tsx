@@ -26,6 +26,7 @@ export interface AuthContextType {
   // Estado
   user: User | null;
   userProfile: UserProfile | null;
+  userProfileId: string | undefined;
   loading: boolean;
   
   // Funciones de autenticación
@@ -162,7 +163,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (session?.user) {
           // Cargar perfil cuando hay un usuario
           try {
-            const profile = await authApi.getUserProfile(session.user.id);
+            const profile = await authApi.getUserProfile(session.user.email || '');
             setUserProfile(profile);
           } catch (error) {
             console.error('Error cargando perfil:', error);
@@ -191,6 +192,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const value: AuthContextType = {
     user,
     userProfile,
+    userProfileId: userProfile?.id, // Nuevo campo
     loading,
     signIn,
     signUp,

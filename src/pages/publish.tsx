@@ -55,8 +55,8 @@ const subcategories = {
 
 export default function Publish() {
   const router = useRouter();
-  const { user, userProfile, loading: authLoading } = useAuth();
-  const { createListing, uploadImage } = useListings({ userId: user?.id });
+  const { user, userProfile, userProfileId, loading: authLoading } = useAuth();
+  const { createListing, uploadImage } = useListings({ userId: userProfileId });
   
   const [formData, setFormData] = useState<FormData>({
     titulo: '',

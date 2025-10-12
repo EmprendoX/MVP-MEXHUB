@@ -36,6 +36,7 @@ export interface AuthResponse {
   success: boolean;
   error?: string;
   user?: any;
+  profileId?: string;
 }
 
 // =========================================================================
@@ -94,9 +95,13 @@ export async function signUp(data: SignUpData): Promise<AuthResponse> {
       avatar_url: null, // Se sube después desde el dashboard
     };
 
-    const { error: profileError } = await supabase
+    const { data: profileData, error: profileError } = await supabase
       .from('users')
-      .insert(userProfile);
+      .insert(userProfile)
+      .select()
+      .single();
+
+    const profileId = profileData?.id;
 
     if (profileError) {
       console.error('❌ Error creando perfil en public.users:', profileError.message);
@@ -112,6 +117,7 @@ export async function signUp(data: SignUpData): Promise<AuthResponse> {
     return {
       success: true,
       user: authData.user,
+      profileId: profileId, // Nuevo campo
     };
   } catch (error: any) {
     console.error('❌ Error inesperado en signUp:', error);
