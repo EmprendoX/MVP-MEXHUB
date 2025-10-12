@@ -83,8 +83,9 @@ export async function signUp(data: SignUpData): Promise<AuthResponse> {
     }
 
     // PASO 2: Crear perfil en public.users
-    // El id se genera automáticamente por gen_random_uuid() según database.txt
+    // Usar el mismo ID de auth.users para sincronización
     const userProfile: UserInsert = {
+      id: authData.user.id, // Usar el mismo ID de auth.users
       nombre: data.nombre,
       email: data.email,
       tipo: data.tipo,
@@ -284,12 +285,13 @@ export async function updateUserProfile(
  * @param userId ID del usuario
  * @returns Perfil del usuario o null
  */
-export async function getUserProfile(userEmail: string) {
+export async function getUserProfile(userId: string) {
   try {
+    console.log('🔍 Buscando perfil para ID:', userId);
     const { data, error } = await supabase
       .from('users')
       .select('*')
-      .eq('email', userEmail)
+      .eq('id', userId)
       .single();
 
     if (error) {
@@ -297,6 +299,7 @@ export async function getUserProfile(userEmail: string) {
       return null;
     }
 
+    console.log('✅ Perfil encontrado:', data);
     return data;
   } catch (error: any) {
     console.error('❌ Error inesperado en getUserProfile:', error);
