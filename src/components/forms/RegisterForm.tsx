@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { FormField, FormSelect, FormRadioGroup, FormButton } from './index';
 
 interface RegisterFormData {
@@ -288,9 +289,9 @@ const RegisterForm = ({ onSubmit, loading = false, className = '' }: RegisterFor
       <div className="text-center">
         <p className="text-text-soft text-sm">
           ¿Ya tienes cuenta?{' '}
-          <a href="/login" className="text-primary hover:text-primary-600 transition-colors font-medium">
+          <Link href="/login" className="text-primary hover:text-primary-600 transition-colors font-medium">
             Inicia sesión aquí
-          </a>
+          </Link>
         </p>
       </div>
     </form>

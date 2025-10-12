@@ -132,7 +132,7 @@ export default function Publish() {
 
     try {
       // PASO 1: Subir imágenes a Supabase Storage
-      let imageUrls: string[] = [];
+      const imageUrls: string[] = [];
       
       if (formData.imagenes.length > 0) {
         setUploadingImages(true);

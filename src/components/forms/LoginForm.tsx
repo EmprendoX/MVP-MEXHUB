@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { FormField, FormButton } from './index';
 
 interface LoginFormData {
@@ -126,9 +127,9 @@ const LoginForm = ({ onSubmit, loading = false, className = '' }: LoginFormProps
       <div className="text-center">
         <p className="text-text-soft text-sm">
           ¿No tienes cuenta?{' '}
-          <a href="/register" className="text-primary hover:text-primary-600 transition-colors font-medium">
+          <Link href="/register" className="text-primary hover:text-primary-600 transition-colors font-medium">
             Regístrate aquí
-          </a>
+          </Link>
         </p>
       </div>
     </form>
