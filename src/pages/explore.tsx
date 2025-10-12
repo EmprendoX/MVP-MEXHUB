@@ -7,6 +7,8 @@ import Navbar from '@/components/Navbar';
 import Filters from '@/components/Filters';
 import CardItem from '@/components/CardItem';
 import Footer from '@/components/Footer';
+import * as listingsApi from '@/lib/api/listings';
+import type { ListingExploreView } from '@/types/supabase';
 
 interface FilterState {
   categories: string[];
@@ -157,7 +159,11 @@ export default function Explore() {
     types: [],
     priceRange: [0, 10000000]
   });
-  const [filteredProducts, setFilteredProducts] = useState(allProducts);
+  
+  // Estado para listings reales de Supabase
+  const [listings, setListings] = useState<ListingExploreView[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Get search query from URL on mount
   useEffect(() => {
@@ -166,55 +172,41 @@ export default function Explore() {
     }
   }, [router.query.q]);
 
-  // Filter products based on search and filters
+  // Cargar listings desde Supabase con filtros aplicados
   useEffect(() => {
-    let filtered = allProducts;
+    async function loadListings() {
+      setLoading(true);
+      setError(null);
 
-    // Filter by search query
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(product =>
-        product.titulo.toLowerCase().includes(query) ||
-        product.descripcion.toLowerCase().includes(query) ||
-        product.categoria.toLowerCase().includes(query) ||
-        product.proveedor.nombre.toLowerCase().includes(query) ||
-        product.ubicacion.toLowerCase().includes(query)
-      );
+      try {
+        // Preparar filtros para la API
+        const apiFilters: listingsApi.ListingFilters = {
+          searchQuery: searchQuery.trim() || undefined,
+          tipo: filters.types.length > 0 ? filters.types : undefined,
+          categoria: filters.categories.length > 0 ? filters.categories : undefined,
+          ubicacion: filters.locations.length > 0 ? filters.locations : undefined,
+          priceMin: filters.priceRange[0] > 0 ? filters.priceRange[0] : undefined,
+          priceMax: filters.priceRange[1] < 10000000 ? filters.priceRange[1] : undefined,
+        };
+
+        // Usar la vista v_listings_explore que ya incluye datos del proveedor
+        const result = await listingsApi.getListingsWithProvider(apiFilters, 100);
+
+        if (result.success) {
+          setListings(result.data || []);
+        } else {
+          setError(result.error || 'Error al cargar publicaciones');
+          setListings([]);
+        }
+      } catch (err: any) {
+        setError(err.message || 'Error inesperado');
+        setListings([]);
+      } finally {
+        setLoading(false);
+      }
     }
 
-    // Filter by categories
-    if (filters.categories.length > 0) {
-      filtered = filtered.filter(product =>
-        filters.categories.includes(product.categoria)
-      );
-    }
-
-    // Filter by locations
-    if (filters.locations.length > 0) {
-      filtered = filtered.filter(product =>
-        filters.locations.some(location =>
-          product.ubicacion.toLowerCase().includes(location.toLowerCase())
-        )
-      );
-    }
-
-    // Filter by types
-    if (filters.types.length > 0) {
-      filtered = filtered.filter(product =>
-        filters.types.includes(product.tipo)
-      );
-    }
-
-    // Filter by price range
-    if (filters.priceRange[0] > 0 || filters.priceRange[1] < 10000000) {
-      filtered = filtered.filter(product => {
-        if (!product.precio) return true; // Services without price
-        return product.precio >= filters.priceRange[0] && 
-               product.precio <= filters.priceRange[1];
-      });
-    }
-
-    setFilteredProducts(filtered);
+    loadListings();
   }, [searchQuery, filters]);
 
   const handleSearch = (e: React.FormEvent) => {
@@ -297,7 +289,7 @@ export default function Explore() {
             {/* Results Summary */}
             <div className="mt-4 flex items-center justify-between">
               <p className="text-text-soft">
-                {filteredProducts.length} resultado{filteredProducts.length !== 1 ? 's' : ''} encontrado{filteredProducts.length !== 1 ? 's' : ''}
+                {loading ? 'Cargando...' : `${listings.length} resultado${listings.length !== 1 ? 's' : ''} encontrado${listings.length !== 1 ? 's' : ''}`}
                 {searchQuery && ` para "${searchQuery}"`}
               </p>
               <div className="flex items-center space-x-2 text-sm text-text-soft">
@@ -320,10 +312,42 @@ export default function Explore() {
 
           {/* Products Grid */}
           <div className="flex-1 p-6">
-            {filteredProducts.length > 0 ? (
+            {loading ? (
+              <div className="text-center py-20">
+                <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary mx-auto mb-4"></div>
+                <p className="text-text-soft">Cargando publicaciones...</p>
+              </div>
+            ) : error ? (
+              <div className="text-center py-20">
+                <svg className="w-24 h-24 text-alert mx-auto mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <h3 className="text-xl font-semibold text-text-light mb-2">Error al cargar publicaciones</h3>
+                <p className="text-text-soft mb-6">{error}</p>
+                <button onClick={() => window.location.reload()} className="btn-primary">
+                  Reintentar
+                </button>
+              </div>
+            ) : listings.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {filteredProducts.map((product) => (
-                  <CardItem key={product.id} {...product} />
+                {listings.map((listing) => (
+                  <CardItem
+                    key={listing.id}
+                    id={listing.id}
+                    titulo={listing.titulo}
+                    descripcion={listing.descripcion || ''}
+                    categoria={listing.categoria || ''}
+                    tipo={listing.tipo}
+                    precio={listing.precio || undefined}
+                    ubicacion={listing.ubicacion || ''}
+                    imagenes={listing.imagenes || []}
+                    proveedor={{
+                      id: listing.proveedor_id,
+                      nombre: listing.proveedor_nombre || 'Usuario',
+                      avatar_url: listing.proveedor_avatar || undefined
+                    }}
+                    created_at={listing.created_at}
+                  />
                 ))}
               </div>
             ) : (

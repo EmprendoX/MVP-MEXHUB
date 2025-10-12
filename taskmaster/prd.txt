@@ -96,39 +96,178 @@ Capa	Tecnología	Descripción
 Frontend	React + Next.js + TailwindCSS	UI web responsiva y rápida.
 Backend / DB	Supabase	Autenticación, CRUD, storage e inbox.
 Storage	Supabase Storage o AWS S3	Imágenes de productos.
-Hosting	Vercel / Netlify	Despliegue del frontend.
+Hosting	Netlify	Despliegue automático del frontend desde GitHub.
 Email Notifs	Supabase Functions o Resend API	Alertas automáticas por email.
 
 8. Base de Datos (Tablas Principales)
-users
-Campo	Tipo	Descripción
-id	UUID	Identificador único
-nombre	text	Nombre / Empresa
-email	text	Correo
-tipo	enum('proveedor', 'comprador', 'freelancer')	Tipo de usuario
-ubicacion	text	Ciudad / Estado
-descripcion	text	Descripción breve
-avatar_url	text	Imagen de perfil
-created_at	timestamp	Fecha de registro
-listings
-Campo	Tipo	Descripción
-id	UUID	Identificador único
-user_id	UUID	Relación con usuario
-titulo	text	Nombre del producto o servicio
-descripcion	text	Descripción
-categoria	text	Categoría
-tipo	enum('producto', 'servicio')	Tipo de publicación
-precio	numeric	Precio o rango
-ubicacion	text	Ciudad / Estado
-imagenes	array	URLs de imágenes
-created_at	timestamp	Fecha de publicación
-messages
-Campo	Tipo	Descripción
-id	UUID	Identificador
-sender_id	UUID	Remitente
-receiver_id	UUID	Destinatario
-contenido	text	Texto del mensaje
-created_at	timestamp	Fecha
+-- =====================================================================
+-- HUBMEX.COM – MVP (Supabase/Postgres)
+-- Tablas que cuadran 1:1 con el PRD
+-- =====================================================================
+
+-- Extensiones necesarias
+create extension if not exists pgcrypto;  -- para gen_random_uuid()
+
+-- ---------------------------------------------------------------------
+-- ENUMS (creados solo si no existen)
+-- ---------------------------------------------------------------------
+do $$
+begin
+  if not exists (select 1 from pg_type where typname = 'user_type') then
+    create type user_type as enum ('proveedor','comprador','freelancer');
+  end if;
+end $$;
+
+do $$
+begin
+  if not exists (select 1 from pg_type where typname = 'listing_type') then
+    create type listing_type as enum ('producto','servicio');
+  end if;
+end $$;
+
+-- ---------------------------------------------------------------------
+-- USERS (perfiles de app; referencia a auth.users opcional)
+-- PRD: id, nombre, email, tipo, ubicacion, descripcion, avatar_url, created_at
+-- Nota: id es UUID; si usas Supabase Auth, puedes referenciar auth.users(id)
+-- ---------------------------------------------------------------------
+create table if not exists public.users (
+  id          uuid primary key default gen_random_uuid(),
+  -- Si quieres vincular estrictamente a auth.users, descomenta la línea siguiente
+  -- constraint fk_users_auth foreign key (id) references auth.users(id) on delete cascade,
+
+  nombre      text,
+  email       text, -- no unique para evitar choques con auth; úsalo como denormalización
+  tipo        user_type not null,
+  ubicacion   text,
+  descripcion text,
+  avatar_url  text,
+  created_at  timestamptz not null default now()
+);
+
+-- Búsquedas frecuentes
+create index if not exists idx_users_tipo       on public.users (tipo);
+create index if not exists idx_users_ubicacion  on public.users (ubicacion);
+create index if not exists idx_users_created_at on public.users (created_at desc);
+
+-- ---------------------------------------------------------------------
+-- LISTINGS (publicaciones de productos/servicios)
+-- PRD: id, user_id, titulo, descripcion, categoria, tipo, precio, ubicacion, imagenes, created_at
+-- ---------------------------------------------------------------------
+create table if not exists public.listings (
+  id          uuid primary key default gen_random_uuid(),
+  user_id     uuid not null references public.users(id) on delete cascade,
+  titulo      text not null,
+  descripcion text,
+  categoria   text,
+  tipo        listing_type not null,
+  precio      numeric, -- rango o aprox (PRD); sin check de >=0 para permitir vacíos
+  ubicacion   text,
+  imagenes    text[],  -- hasta 5 imágenes recomendado en PRD
+  created_at  timestamptz not null default now(),
+
+  constraint chk_listings_imagenes_max5
+    check (imagenes is null or array_length(imagenes, 1) <= 5)
+);
+
+-- Índices para filtros y orden
+create index if not exists idx_listings_user            on public.listings (user_id);
+create index if not exists idx_listings_tipo            on public.listings (tipo);
+create index if not exists idx_listings_categoria       on public.listings (categoria);
+create index if not exists idx_listings_ubicacion       on public.listings (ubicacion);
+create index if not exists idx_listings_created_at_desc on public.listings (created_at desc);
+
+-- Full-Text Search (español) sobre título+descripción+categoría
+-- Columna generada + índice GIN para búsquedas por palabra clave
+alter table public.listings
+  add column if not exists fts tsvector
+  generated always as (
+    setweight(to_tsvector('spanish', coalesce(titulo,'')), 'A') ||
+    setweight(to_tsvector('spanish', coalesce(descripcion,'')), 'B') ||
+    setweight(to_tsvector('spanish', coalesce(categoria,'')), 'C')
+  ) stored;
+
+create index if not exists idx_listings_fts on public.listings using gin (fts);
+
+-- ---------------------------------------------------------------------
+-- MESSAGES (mensajería interna 1 a 1)
+-- PRD: id, sender_id, receiver_id, contenido, created_at
+-- ---------------------------------------------------------------------
+create table if not exists public.messages (
+  id          uuid primary key default gen_random_uuid(),
+  sender_id   uuid not null references public.users(id) on delete cascade,
+  receiver_id uuid not null references public.users(id) on delete cascade,
+  contenido   text not null,
+  created_at  timestamptz not null default now()
+);
+
+-- Índices para bandejas y orden
+create index if not exists idx_messages_inbox   on public.messages (receiver_id, created_at desc);
+create index if not exists idx_messages_outbox  on public.messages (sender_id,  created_at desc);
+
+-- =====================================================================
+-- (OPCIONAL) VISTA PARA JOIN RÁPIDO EN EXPLORAR
+-- Une listing con nombre del proveedor y su ubicación para cards
+-- =====================================================================
+create or replace view public.v_listings_explore as
+select
+  l.id,
+  l.titulo,
+  l.descripcion,
+  l.categoria,
+  l.tipo,
+  l.precio,
+  l.ubicacion,
+  l.imagenes,
+  l.created_at,
+  u.id          as proveedor_id,
+  u.nombre      as proveedor_nombre,
+  u.ubicacion   as proveedor_ubicacion,
+  u.avatar_url  as proveedor_avatar
+from public.listings l
+join public.users    u on u.id = l.user_id;
+
+-- =====================================================================
+-- (OPCIONAL) RLS – Políticas seguras (si quieres activarlas ahora)
+-- Para MVP público, puedes dejar RLS desactivado hasta tener panel.
+-- =====================================================================
+
+-- -- Habilitar RLS
+-- alter table public.users    enable row level security;
+-- alter table public.listings enable row level security;
+-- alter table public.messages enable row level security;
+
+-- -- USERS: leer todos; actualizar solo el propio registro; insertar solo como el propio uid
+-- create policy users_select_all on public.users
+--   for select using (true);
+
+-- create policy users_update_own on public.users
+--   for update using (auth.uid() = id);
+
+-- create policy users_insert_self on public.users
+--   for insert with check (auth.uid() = id);
+
+-- -- LISTINGS: leer todos; escribir solo dueño
+-- create policy listings_select_all on public.listings
+--   for select using (true);
+
+-- create policy listings_write_own on public.listings
+--   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+-- -- MESSAGES: ver solo si eres parte; enviar solo como remitente autenticado
+-- create policy messages_select_participant on public.messages
+--   for select using (auth.uid() = sender_id or auth.uid() = receiver_id);
+
+-- create policy messages_insert_sender on public.messages
+--   for insert with check (auth.uid() = sender_id);
+
+-- =====================================================================
+-- NOTAS
+-- - Si vas a usar Supabase Auth, considera poblar public.users al registrar
+--   (id = auth.uid()). Puedes mantener el email solo como copia para búsqueda.
+-- - La vista v_listings_explore es útil para la página “Explorar”.
+-- - Para buscar por palabra clave: WHERE fts @@ plainto_tsquery('spanish', :q)
+-- =====================================================================
+
 
 9. Métricas de Éxito (KPIs MVP)
 Métrica	Descripción	Meta inicial

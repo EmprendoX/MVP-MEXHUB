@@ -23,7 +23,8 @@ El proyecto está basado en el PRD “Hecho en México Connect – MVP v1.0” y
 ─────────────────────────────────────────────
 - **Frontend:** React + Next.js + TailwindCSS
 - **Backend:** Supabase (DB + Auth + Storage)
-- **Hosting:** Vercel
+- **Control de versiones:** GitHub
+- **Hosting:** Netlify
 - **Email:** Supabase Functions / Resend API (solo placeholders)
 - **DB:** Postgres (a través de Supabase)
 - **Infra:** Arquitectura modular, código limpio, ESLint + Prettier.
@@ -185,7 +186,7 @@ Ejemplo:
 Ahora genera el **proyecto completo de HUBMEX.COM** siguiendo este PRD.  
 Valida el esquema Supabase antes de escribir código.  
 No ejecutes acciones no verificadas.  
-Construye el proyecto modular, limpio y listo para despliegue en Vercel.
+Construye el proyecto modular, limpio y listo para despliegue en Netlify desde GitHub.
 
 # Output esperado:
 - Archivos de código fuente (React + Next.js).

@@ -1,0 +1,22 @@
+{
+  "projectName": "HUBMEX-MVP",
+  "description": "HUBMEX.COM - Directorio B2B para manufactura mexicana",
+  "taskmaster": {
+    "directory": "./taskmaster",
+    "prd": "./taskmaster/prd.txt",
+    "roadmap": "./taskmaster/roadmap.txt",
+    "database": "./taskmaster/database.txt",
+    "buildingIn": "./taskmaster/building_in.txt"
+  },
+  "files": {
+    "exclude": [
+      "node_modules",
+      ".next",
+      "dist",
+      "build",
+      ".env",
+      ".env.local"
+    ]
+  }
+}
+

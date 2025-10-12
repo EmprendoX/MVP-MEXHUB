@@ -1,9 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Head from 'next/head';
+import { useRouter } from 'next/router';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import { useAuth } from '@/lib/hooks/useAuth';
+import { useMessages } from '@/lib/hooks/useMessages';
 
 interface Message {
   id: string;
@@ -11,23 +14,28 @@ interface Message {
   receiver_id: string;
   contenido: string;
   created_at: string;
-  is_read: boolean;
 }
 
 interface Conversation {
   id: string;
   user: {
     id: string;
-    nombre: string;
-    avatar_url?: string;
-    company: string;
+    nombre: string | null;
+    avatar_url?: string | null;
+    company?: string; // Hacer opcional para compatibilidad
   };
-  lastMessage: Message;
+  lastMessage: {
+    id: string;
+    sender_id: string;
+    receiver_id: string;
+    contenido: string;
+    created_at: string;
+  };
   unreadCount: number;
   product?: {
     id: string;
     titulo: string;
-  };
+  } | null;
 }
 
 // Datos de ejemplo para conversaciones
@@ -44,8 +52,7 @@ const conversations: Conversation[] = [
       sender_id: 'user-1',
       receiver_id: 'current-user',
       contenido: 'Hola, estoy interesado en la máquina CNC que tienes publicada. ¿Podrías enviarme más información técnica?',
-      created_at: '2024-01-27T14:30:00Z',
-      is_read: false
+      created_at: '2024-01-27T14:30:00Z'
     },
     unreadCount: 2,
     product: {
@@ -65,8 +72,7 @@ const conversations: Conversation[] = [
       sender_id: 'current-user',
       receiver_id: 'user-2',
       contenido: 'Perfecto, te envío la información detallada por email.',
-      created_at: '2024-01-27T11:15:00Z',
-      is_read: true
+      created_at: '2024-01-27T11:15:00Z'
     },
     unreadCount: 0,
     product: {
@@ -86,8 +92,7 @@ const conversations: Conversation[] = [
       sender_id: 'user-3',
       receiver_id: 'current-user',
       contenido: 'Necesitamos cotización para 1000 componentes electrónicos. ¿Cuál sería el precio por unidad?',
-      created_at: '2024-01-26T16:45:00Z',
-      is_read: true
+      created_at: '2024-01-26T16:45:00Z'
     },
     unreadCount: 0,
     product: {
@@ -107,8 +112,7 @@ const conversations: Conversation[] = [
       sender_id: 'user-4',
       receiver_id: 'current-user',
       contenido: '¿Tienes disponibilidad para una consultoría de procesos el próximo mes?',
-      created_at: '2024-01-25T09:20:00Z',
-      is_read: false
+      created_at: '2024-01-25T09:20:00Z'
     },
     unreadCount: 1
   }
@@ -123,32 +127,28 @@ const getMessagesForConversation = (conversationId: string): Message[] => {
         sender_id: 'user-1',
         receiver_id: 'current-user',
         contenido: 'Hola, vi tu publicación de la máquina CNC. Me interesa mucho.',
-        created_at: '2024-01-27T14:00:00Z',
-        is_read: true
+        created_at: '2024-01-27T14:00:00Z'
       },
       {
         id: 'msg-1-2',
         sender_id: 'current-user',
         receiver_id: 'user-1',
         contenido: '¡Hola Carlos! Me da mucho gusto que te interese. ¿En qué te puedo ayudar?',
-        created_at: '2024-01-27T14:05:00Z',
-        is_read: true
+        created_at: '2024-01-27T14:05:00Z'
       },
       {
         id: 'msg-1-3',
         sender_id: 'user-1',
         receiver_id: 'current-user',
         contenido: 'Necesito información técnica detallada: especificaciones, capacidades de corte, software incluido, etc.',
-        created_at: '2024-01-27T14:10:00Z',
-        is_read: true
+        created_at: '2024-01-27T14:10:00Z'
       },
       {
         id: 'msg-1-4',
         sender_id: 'user-1',
         receiver_id: 'current-user',
         contenido: 'Hola, estoy interesado en la máquina CNC que tienes publicada. ¿Podrías enviarme más información técnica?',
-        created_at: '2024-01-27T14:30:00Z',
-        is_read: false
+        created_at: '2024-01-27T14:30:00Z'
       }
     ];
   }
@@ -156,12 +156,49 @@ const getMessagesForConversation = (conversationId: string): Message[] => {
 };
 
 export default function Messages() {
-  const [selectedConversation, setSelectedConversation] = useState<string>('1');
+  const router = useRouter();
+  const { user, loading: authLoading } = useAuth();
+  const { 
+    conversations, 
+    messages, 
+    loading: messagesLoading, 
+    error: messagesError,
+    sendMessage,
+    selectConversation,
+    currentConversationId
+  } = useMessages();
+  
+  const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
   const [newMessage, setNewMessage] = useState('');
   const [isMobileView, setIsMobileView] = useState(false);
 
+  // Proteger ruta: redirigir a login si no está autenticado
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push('/login');
+    }
+  }, [user, authLoading, router]);
+
   const selectedConv = conversations.find(c => c.id === selectedConversation);
-  const messages = selectedConv ? getMessagesForConversation(selectedConv.id) : [];
+  const currentMessages = messages; // Usar mensajes reales del hook
+  
+  // Mostrar loading mientras verifica autenticación
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-dark-500 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-text-soft">Cargando...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // No mostrar nada si no está autenticado (está redirigiendo)
+  if (!user) {
+    return null;
+  }
+  // Los mensajes ahora vienen del hook useMessages
 
   const formatTime = (dateString: string) => {
     const date = new Date(dateString);
@@ -187,12 +224,15 @@ export default function Messages() {
     }
   };
 
-  const handleSendMessage = (e: React.FormEvent) => {
+  const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (newMessage.trim()) {
-      // Simulate sending message
-      console.log('Sending message:', newMessage);
-      setNewMessage('');
+    if (newMessage.trim() && selectedConversation) {
+      const result = await sendMessage(selectedConversation, newMessage);
+      if (result.success) {
+        setNewMessage('');
+      } else {
+        console.error('Error enviando mensaje:', result.error);
+      }
     }
   };
 
@@ -200,6 +240,7 @@ export default function Messages() {
     <div
       onClick={() => {
         setSelectedConversation(conversation.id);
+        selectConversation(conversation.id);
         setIsMobileView(false);
       }}
       className={`p-4 cursor-pointer transition-colors duration-200 ${
@@ -211,20 +252,20 @@ export default function Messages() {
       <div className="flex items-start space-x-3">
         <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
           <span className="text-dark font-medium text-sm">
-            {conversation.user.nombre.split(' ').map(n => n[0]).join('')}
+            {conversation.user.nombre?.split(' ').map(n => n[0]).join('') || 'U'}
           </span>
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between">
             <h3 className="text-text-light font-medium truncate">
-              {conversation.user.nombre}
+              {conversation.user.nombre || 'Usuario'}
             </h3>
             <span className="text-text-soft text-xs">
               {formatTime(conversation.lastMessage.created_at)}
             </span>
           </div>
           <p className="text-text-soft text-sm truncate">
-            {conversation.user.company}
+            {conversation.user.company || 'Usuario'}
           </p>
           <p className="text-text-soft text-sm truncate mt-1">
             {conversation.lastMessage.contenido}
@@ -247,7 +288,7 @@ export default function Messages() {
   );
 
   const MessageBubble = ({ message }: { message: Message }) => {
-    const isOwn = message.sender_id === 'current-user';
+    const isOwn = message.sender_id === user?.id;
     
     return (
       <div className={`flex ${isOwn ? 'justify-end' : 'justify-start'} mb-4`}>
@@ -291,9 +332,20 @@ export default function Messages() {
             </div>
             
             <div className="overflow-y-auto h-[calc(100%-80px)]">
-              {conversations.map((conversation) => (
-                <ConversationItem key={conversation.id} conversation={conversation} />
-              ))}
+              {messagesLoading ? (
+                <div className="p-4 text-center text-text-soft">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
+                  Cargando conversaciones...
+                </div>
+              ) : conversations.length === 0 ? (
+                <div className="p-4 text-center text-text-soft">
+                  No tienes conversaciones aún
+                </div>
+              ) : (
+                conversations.map((conversation) => (
+                  <ConversationItem key={conversation.id} conversation={conversation} />
+                ))
+              )}
             </div>
           </div>
 
@@ -316,12 +368,12 @@ export default function Messages() {
                     
                     <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
                       <span className="text-dark font-medium">
-                        {selectedConv.user.nombre.split(' ').map(n => n[0]).join('')}
+                        {selectedConv.user.nombre?.split(' ').map(n => n[0]).join('') || 'U'}
                       </span>
                     </div>
                     <div>
-                      <h3 className="text-text-light font-medium">{selectedConv.user.nombre}</h3>
-                      <p className="text-text-soft text-sm">{selectedConv.user.company}</p>
+                      <h3 className="text-text-light font-medium">{selectedConv.user.nombre || 'Usuario'}</h3>
+                      <p className="text-text-soft text-sm">Usuario</p>
                     </div>
                   </div>
                   
@@ -341,8 +393,15 @@ export default function Messages() {
 
                 {/* Messages Area */}
                 <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                  {messages.length > 0 ? (
-                    messages.map((message) => (
+                  {messagesLoading ? (
+                    <div className="flex items-center justify-center h-full">
+                      <div className="text-center">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+                        <p className="text-text-soft">Cargando mensajes...</p>
+                      </div>
+                    </div>
+                  ) : currentMessages.length > 0 ? (
+                    currentMessages.map((message) => (
                       <MessageBubble key={message.id} message={message} />
                     ))
                   ) : (
@@ -415,9 +474,20 @@ export default function Messages() {
             </div>
             
             <div className="overflow-y-auto h-[calc(100%-80px)]">
-              {conversations.map((conversation) => (
-                <ConversationItem key={conversation.id} conversation={conversation} />
-              ))}
+              {messagesLoading ? (
+                <div className="p-4 text-center text-text-soft">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
+                  Cargando conversaciones...
+                </div>
+              ) : conversations.length === 0 ? (
+                <div className="p-4 text-center text-text-soft">
+                  No tienes conversaciones aún
+                </div>
+              ) : (
+                conversations.map((conversation) => (
+                  <ConversationItem key={conversation.id} conversation={conversation} />
+                ))
+              )}
             </div>
           </div>
         )}

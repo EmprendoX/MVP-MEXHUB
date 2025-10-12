@@ -7,113 +7,40 @@ import { useRouter } from 'next/router';
 import Navbar from '@/components/Navbar';
 import CardItem from '@/components/CardItem';
 import Footer from '@/components/Footer';
-
-interface UserProfile {
-  id: string;
-  nombre: string;
-  email: string;
-  tipo: 'proveedor' | 'comprador' | 'freelancer';
-  ubicacion: string;
-  descripcion: string;
-  avatar_url?: string;
-  created_at: string;
-  website?: string;
-  phone?: string;
-  categories: string[];
-}
-
-interface UserPublication {
-  id: string;
-  titulo: string;
-  descripcion: string;
-  categoria: string;
-  tipo: 'producto' | 'servicio';
-  precio?: number;
-  ubicacion: string;
-  imagenes: string[];
-  created_at: string;
-}
-
-// Datos de ejemplo para el perfil del usuario
-const getUserProfile = (id: string): UserProfile => {
-  return {
-    id: id,
-    nombre: 'MetalWorks México',
-    email: 'contacto@metalworksmexico.com',
-    tipo: 'proveedor',
-    ubicacion: 'Guadalajara, Jalisco',
-    descripcion: 'Empresa especializada en maquinaria industrial CNC y servicios de fabricación de precisión. Con más de 15 años de experiencia en el sector manufacturero, ofrecemos soluciones tecnológicas avanzadas para la industria automotriz, aeroespacial y de bienes de consumo. Nuestro equipo de ingenieros altamente capacitados garantiza la más alta calidad en cada proyecto.',
-    created_at: '2020-03-15T10:00:00Z',
-    website: 'https://metalworksmexico.com',
-    phone: '+52 33 1234 5678',
-    categories: ['Maquinaria Industrial', 'Servicios de Diseño', 'Metalúrgica']
-  };
-};
-
-// Datos de ejemplo para las publicaciones del usuario
-const getUserPublications = (userId: string): UserPublication[] => {
-  return [
-    {
-      id: '1',
-      titulo: 'Maquinaria Industrial CNC',
-      descripcion: 'Máquinas CNC de alta precisión para la industria manufacturera. Fabricación de piezas metálicas y plásticas con tecnología de vanguardia.',
-      categoria: 'Maquinaria Industrial',
-      tipo: 'producto',
-      precio: 2500000,
-      ubicacion: 'Guadalajara, Jalisco',
-      imagenes: ['/placeholder.svg'],
-      created_at: '2024-01-15T10:30:00Z'
-    },
-    {
-      id: '2',
-      titulo: 'Servicios de Diseño Industrial',
-      descripcion: 'Diseño y desarrollo de productos industriales. Desde conceptualización hasta prototipado y manufactura.',
-      categoria: 'Servicios de Diseño',
-      tipo: 'servicio',
-      precio: undefined,
-      ubicacion: 'Guadalajara, Jalisco',
-      imagenes: ['/placeholder.svg'],
-      created_at: '2024-01-14T15:45:00Z'
-    },
-    {
-      id: '3',
-      titulo: 'Piezas Metálicas Personalizadas',
-      descripcion: 'Fabricación de piezas metálicas a medida para la industria automotriz y aeroespacial.',
-      categoria: 'Metalúrgica',
-      tipo: 'producto',
-      precio: 120000,
-      ubicacion: 'Guadalajara, Jalisco',
-      imagenes: ['/placeholder.svg'],
-      created_at: '2024-01-13T09:20:00Z'
-    },
-    {
-      id: '4',
-      titulo: 'Consultoría en Manufactura',
-      descripcion: 'Consultoría especializada en optimización de procesos de manufactura y mejora continua.',
-      categoria: 'Consultoría',
-      tipo: 'servicio',
-      precio: undefined,
-      ubicacion: 'Guadalajara, Jalisco',
-      imagenes: ['/placeholder.svg'],
-      created_at: '2024-01-12T14:15:00Z'
-    }
-  ];
-};
+import { getUserProfile } from '@/lib/api/auth';
+import { useListings } from '@/lib/hooks/useListings';
+import type { User } from '@/types/supabase';
 
 export default function Profile() {
   const router = useRouter();
   const { id } = router.query;
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [publications, setPublications] = useState<UserPublication[]>([]);
+  const [profile, setProfile] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'all' | 'productos' | 'servicios'>('all');
+  
+  const { listings, loading: listingsLoading, refreshListings } = useListings({
+    userId: typeof id === 'string' ? id : undefined,
+    autoFetch: false,
+  });
 
+  // Cargar perfil y publicaciones cuando el ID esté disponible
   useEffect(() => {
-    if (id && typeof id === 'string') {
-      const userProfile = getUserProfile(id);
-      const userPublications = getUserPublications(id);
-      setProfile(userProfile);
-      setPublications(userPublications);
+    async function loadProfileData() {
+      if (id && typeof id === 'string') {
+        setLoading(true);
+        
+        // Cargar perfil del usuario
+        const userProfile = await getUserProfile(id);
+        setProfile(userProfile);
+        
+        // Cargar publicaciones del usuario
+        await refreshListings();
+        
+        setLoading(false);
+      }
     }
+    
+    loadProfileData();
   }, [id]);
 
   if (!profile) {
@@ -132,10 +59,10 @@ export default function Profile() {
     );
   }
 
-  const filteredPublications = publications.filter(pub => {
+  const filteredListings = listings.filter(listing => {
     if (activeTab === 'all') return true;
-    if (activeTab === 'productos') return pub.tipo === 'producto';
-    if (activeTab === 'servicios') return pub.tipo === 'servicio';
+    if (activeTab === 'productos') return listing.tipo === 'producto';
+    if (activeTab === 'servicios') return listing.tipo === 'servicio';
     return true;
   });
 
@@ -168,8 +95,8 @@ export default function Profile() {
   return (
     <>
       <Head>
-        <title>{profile.nombre} - Perfil en HUBMEX</title>
-        <meta name="description" content={`Perfil de ${profile.nombre} en HUBMEX. ${profile.descripcion.substring(0, 150)}...`} />
+        <title>{profile.nombre || 'Usuario'} - Perfil en HUBMEX</title>
+        <meta name="description" content={`Perfil de ${profile.nombre || 'Usuario'} en HUBMEX. ${(profile.descripcion || '').substring(0, 150)}...`} />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
 
@@ -186,14 +113,14 @@ export default function Profile() {
                 {profile.avatar_url ? (
                   <Image
                     src={profile.avatar_url}
-                    alt={profile.nombre}
+                    alt={profile.nombre || 'Usuario'}
                     width={128}
                     height={128}
                     className="w-full h-full rounded-full object-cover"
                   />
                 ) : (
                   <span className="text-dark text-4xl font-bold">
-                    {profile.nombre.split(' ').map(n => n[0]).join('')}
+                    {(profile.nombre || 'U').split(' ').map(n => n[0]).join('')}
                   </span>
                 )}
               </div>
@@ -237,23 +164,28 @@ export default function Profile() {
                       🌐 {profile.website}
                     </a>
                   )}
-                  {profile.phone && (
-                    <span>📞 {profile.phone}</span>
+                  {profile.telefono && (
+                    <span>📞 {profile.telefono}</span>
                   )}
                   <span>✉️ {profile.email}</span>
                 </div>
 
-                {/* Categories */}
+                {/* User Type Badge */}
                 <div className="mt-4">
                   <div className="flex flex-wrap gap-2">
-                    {profile.categories.map((category) => (
-                      <span
-                        key={category}
-                        className="px-3 py-1 bg-light-bg text-text-light rounded-full text-sm border border-gray-light"
-                      >
-                        {category}
+                    <span className="px-3 py-1 bg-primary bg-opacity-20 text-primary rounded-full text-sm border border-primary capitalize">
+                      {profile.tipo}
+                    </span>
+                    {profile.website && (
+                      <span className="px-3 py-1 bg-light-bg text-text-light rounded-full text-sm border border-gray-light">
+                        🌐 Sitio web
                       </span>
-                    ))}
+                    )}
+                    {profile.telefono && (
+                      <span className="px-3 py-1 bg-light-bg text-text-light rounded-full text-sm border border-gray-light">
+                        📞 Teléfono
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -266,18 +198,18 @@ export default function Profile() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
               <div className="text-center">
-                <div className="text-2xl font-bold text-primary mb-1">{publications.length}</div>
+                <div className="text-2xl font-bold text-primary mb-1">{listings.length}</div>
                 <div className="text-text-soft text-sm">Publicaciones</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-success mb-1">
-                  {publications.filter(p => p.tipo === 'producto').length}
+                  {listings.filter(p => p.tipo === 'producto').length}
                 </div>
                 <div className="text-text-soft text-sm">Productos</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-primary mb-1">
-                  {publications.filter(p => p.tipo === 'servicio').length}
+                  {listings.filter(p => p.tipo === 'servicio').length}
                 </div>
                 <div className="text-text-soft text-sm">Servicios</div>
               </div>
@@ -308,7 +240,7 @@ export default function Profile() {
                     : 'text-text-soft hover:text-text-light'
                 }`}
               >
-                Todos ({publications.length})
+                Todos ({listings.length})
               </button>
               <button
                 onClick={() => setActiveTab('productos')}
@@ -318,7 +250,7 @@ export default function Profile() {
                     : 'text-text-soft hover:text-text-light'
                 }`}
               >
-                Productos ({publications.filter(p => p.tipo === 'producto').length})
+                Productos ({listings.filter(p => p.tipo === 'producto').length})
               </button>
               <button
                 onClick={() => setActiveTab('servicios')}
@@ -328,31 +260,36 @@ export default function Profile() {
                     : 'text-text-soft hover:text-text-light'
                 }`}
               >
-                Servicios ({publications.filter(p => p.tipo === 'servicio').length})
+                Servicios ({listings.filter(p => p.tipo === 'servicio').length})
               </button>
             </div>
           </div>
 
           {/* Publications Grid */}
-          {filteredPublications.length > 0 ? (
+          {listingsLoading ? (
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+              <p className="text-text-soft">Cargando publicaciones...</p>
+            </div>
+          ) : filteredListings.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredPublications.map((publication) => (
+              {filteredListings.map((listing) => (
                 <CardItem
-                  key={publication.id}
-                  id={publication.id}
-                  titulo={publication.titulo}
-                  descripcion={publication.descripcion}
-                  categoria={publication.categoria}
-                  tipo={publication.tipo}
-                  precio={publication.precio}
-                  ubicacion={publication.ubicacion}
-                  imagenes={publication.imagenes}
+                  key={listing.id}
+                  id={listing.id}
+                  titulo={listing.titulo}
+                  descripcion={listing.descripcion || ''}
+                  categoria={listing.categoria || ''}
+                  tipo={listing.tipo}
+                  precio={listing.precio || undefined}
+                  ubicacion={listing.ubicacion || ''}
+                  imagenes={listing.imagenes || []}
                   proveedor={{
                     id: profile.id,
-                    nombre: profile.nombre,
-                    avatar_url: profile.avatar_url
+                    nombre: profile.nombre || 'Usuario',
+                    avatar_url: profile.avatar_url || undefined
                   }}
-                  created_at={publication.created_at}
+                  created_at={listing.created_at}
                 />
               ))}
             </div>

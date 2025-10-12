@@ -1,10 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import { useAuth } from '@/lib/hooks/useAuth';
+import { useListings } from '@/lib/hooks/useListings';
 
 // Datos de ejemplo para el dashboard
 const userStats = {
@@ -78,7 +81,28 @@ const recentMessages = [
 ];
 
 export default function Dashboard() {
+  const router = useRouter();
+  const { user, userProfile, loading: authLoading } = useAuth();
+  const { listings, loading: listingsLoading, deleteListing, refreshListings } = useListings({
+    userId: user?.id,
+    autoFetch: false,  // Cargaremos manualmente cuando el user esté disponible
+  });
+  
   const [activeTab, setActiveTab] = useState('overview');
+
+  // Proteger ruta: redirigir a login si no está autenticado
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push('/login');
+    }
+  }, [user, authLoading, router]);
+
+  // Cargar listings cuando el usuario esté disponible
+  useEffect(() => {
+    if (user) {
+      refreshListings();
+    }
+  }, [user]);
 
   const formatDate = (date: string) => {
     return new Date(date).toLocaleDateString('es-MX', {
@@ -97,6 +121,23 @@ export default function Dashboard() {
       maximumFractionDigits: 0,
     }).format(price);
   };
+
+  // Mostrar loading mientras verifica autenticación
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-dark-500 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-text-soft">Cargando...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // No mostrar nada si no está autenticado (está redirigiendo)
+  if (!user) {
+    return null;
+  }
 
   const StatCard = ({ title, value, icon, color }: { title: string; value: number; icon: React.ReactNode; color: string }) => (
     <div className="card">
@@ -133,9 +174,9 @@ export default function Dashboard() {
                   <div className="w-20 h-20 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
                     <span className="text-dark text-2xl font-bold">U</span>
                   </div>
-                  <h2 className="text-xl font-bold text-text-light">Usuario Demo</h2>
-                  <p className="text-text-soft text-sm">Proveedor</p>
-                  <p className="text-text-soft text-xs">Guadalajara, Jalisco</p>
+                  <h2 className="text-xl font-bold text-text-light">{userProfile?.nombre || 'Usuario'}</h2>
+                  <p className="text-text-soft text-sm capitalize">{userProfile?.tipo || 'Usuario'}</p>
+                  <p className="text-text-soft text-xs">{userProfile?.ubicacion || ''}</p>
                 </div>
 
                 <nav className="space-y-2">
@@ -225,7 +266,7 @@ export default function Dashboard() {
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     <StatCard
                       title="Publicaciones Activas"
-                      value={userStats.totalPublications}
+                      value={listings.length}
                       color="text-primary"
                       icon={
                         <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -353,39 +394,64 @@ export default function Dashboard() {
                           </tr>
                         </thead>
                         <tbody>
-                          {userPublications.map((pub) => (
-                            <tr key={pub.id} className="border-b border-gray-light">
-                              <td className="py-3 px-4">
-                                <div>
-                                  <p className="text-text-light font-medium">{pub.titulo}</p>
-                                  <p className="text-text-soft text-sm">{pub.tipo}</p>
-                                </div>
-                              </td>
-                              <td className="py-3 px-4 text-text-soft">{pub.categoria}</td>
-                              <td className="py-3 px-4 text-text-light">{formatPrice(pub.precio)}</td>
-                              <td className="py-3 px-4 text-text-soft">{pub.vistas}</td>
-                              <td className="py-3 px-4 text-text-soft">{pub.contactos}</td>
-                              <td className="py-3 px-4">
-                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                  pub.estado === 'activo'
-                                    ? 'bg-success bg-opacity-20 text-success'
-                                    : 'bg-gray-light bg-opacity-20 text-text-soft'
-                                }`}>
-                                  {pub.estado}
-                                </span>
-                              </td>
-                              <td className="py-3 px-4">
-                                <div className="flex space-x-2">
-                                  <button className="text-primary hover:text-primary-600 text-sm">
-                                    Editar
-                                  </button>
-                                  <button className="text-alert hover:text-red-600 text-sm">
-                                    Eliminar
-                                  </button>
+                          {listingsLoading ? (
+                            <tr>
+                              <td colSpan={7} className="py-8 text-center text-text-soft">
+                                <div className="flex items-center justify-center">
+                                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mr-3"></div>
+                                  Cargando publicaciones...
                                 </div>
                               </td>
                             </tr>
-                          ))}
+                          ) : listings.length === 0 ? (
+                            <tr>
+                              <td colSpan={7} className="py-8 text-center text-text-soft">
+                                No tienes publicaciones aún. <Link href="/publish" className="text-primary">Crea tu primera publicación</Link>
+                              </td>
+                            </tr>
+                          ) : (
+                            listings.map((listing) => (
+                              <tr key={listing.id} className="border-b border-gray-light">
+                                <td className="py-3 px-4">
+                                  <div>
+                                    <p className="text-text-light font-medium">{listing.titulo}</p>
+                                    <p className="text-text-soft text-sm">{listing.tipo}</p>
+                                  </div>
+                                </td>
+                                <td className="py-3 px-4 text-text-soft">{listing.categoria || '-'}</td>
+                                <td className="py-3 px-4 text-text-light">{formatPrice(listing.precio)}</td>
+                                <td className="py-3 px-4 text-text-soft">-</td>
+                                <td className="py-3 px-4 text-text-soft">-</td>
+                                <td className="py-3 px-4">
+                                  <span className="px-2 py-1 rounded-full text-xs font-medium bg-success bg-opacity-20 text-success">
+                                    activo
+                                  </span>
+                                </td>
+                                <td className="py-3 px-4">
+                                  <div className="flex space-x-2">
+                                    <button className="text-primary hover:text-primary-600 text-sm">
+                                      Editar
+                                    </button>
+                                    <button 
+                                      className="text-alert hover:text-red-600 text-sm"
+                                      onClick={async () => {
+                                        if (confirm('¿Estás seguro de eliminar esta publicación?')) {
+                                          const result = await deleteListing(listing.id);
+                                          if (result.success) {
+                                            alert('Publicación eliminada exitosamente');
+                                          } else {
+                                            alert(result.error || 'Error al eliminar');
+                                          }
+                                        }
+                                      }}
+                                    >
+                                      Eliminar
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))
+                          )}
                         </tbody>
                       </table>
                     </div>

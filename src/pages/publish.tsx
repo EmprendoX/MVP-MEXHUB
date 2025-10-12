@@ -1,10 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import Image from 'next/image';
+import { useRouter } from 'next/router';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import { useAuth } from '@/lib/hooks/useAuth';
+import { useListings } from '@/lib/hooks/useListings';
 
 interface FormData {
   titulo: string;
@@ -51,6 +54,10 @@ const subcategories = {
 };
 
 export default function Publish() {
+  const router = useRouter();
+  const { user, userProfile, loading: authLoading } = useAuth();
+  const { createListing, uploadImage } = useListings();
+  
   const [formData, setFormData] = useState<FormData>({
     titulo: '',
     descripcion: '',
@@ -68,6 +75,15 @@ export default function Publish() {
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [uploadingImages, setUploadingImages] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+
+  // Proteger ruta: redirigir a login si no está autenticado
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push('/login');
+    }
+  }, [user, authLoading, router]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -104,35 +120,89 @@ export default function Publish() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!user) {
+      alert('Debes iniciar sesión para publicar');
+      router.push('/login');
+      return;
+    }
+
     setIsSubmitting(true);
+    setUploadProgress(0);
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // PASO 1: Subir imágenes a Supabase Storage
+      let imageUrls: string[] = [];
       
-      setSubmitSuccess(true);
-      // Reset form after success
-      setTimeout(() => {
-        setFormData({
-          titulo: '',
-          descripcion: '',
-          tipo: 'producto',
-          categoria: '',
-          subcategoria: '',
-          precio: '',
-          ubicacion: '',
-          tiempoEntrega: '',
-          capacidad: '',
-          moq: '',
-          imagenes: []
-        });
-        setImagePreviews([]);
-        setSubmitSuccess(false);
-      }, 3000);
+      if (formData.imagenes.length > 0) {
+        setUploadingImages(true);
+        
+        for (let i = 0; i < formData.imagenes.length; i++) {
+          const file = formData.imagenes[i];
+          setUploadProgress(Math.round(((i + 1) / formData.imagenes.length) * 100));
+          
+          const uploadResult = await uploadImage(file);
+          
+          if (uploadResult.success && uploadResult.data) {
+            imageUrls.push(uploadResult.data);
+          } else {
+            console.error('Error subiendo imagen:', uploadResult.error);
+            // Continuar con las demás imágenes
+          }
+        }
+        
+        setUploadingImages(false);
+      }
+
+      // PASO 2: Crear publicación en BD
+      // Mapear campos del form a los campos de database.txt
+      const listingData = {
+        titulo: formData.titulo,
+        descripcion: formData.descripcion || undefined,
+        tipo: formData.tipo,
+        categoria: formData.categoria || undefined,
+        subcategoria: formData.subcategoria || undefined,
+        precio: formData.precio ? parseFloat(formData.precio) : undefined,
+        ubicacion: formData.ubicacion || undefined,
+        tiempo_entrega: formData.tiempoEntrega || undefined,
+        capacidad: formData.capacidad || undefined,
+        moq: formData.moq || undefined,
+        imagenes: imageUrls.length > 0 ? imageUrls : undefined,
+      };
+
+      const result = await createListing(listingData);
+
+      if (result.success) {
+        setSubmitSuccess(true);
+        
+        // Reset form después de 2 segundos y redirigir al dashboard
+        setTimeout(() => {
+          setFormData({
+            titulo: '',
+            descripcion: '',
+            tipo: 'producto',
+            categoria: '',
+            subcategoria: '',
+            precio: '',
+            ubicacion: '',
+            tiempoEntrega: '',
+            capacidad: '',
+            moq: '',
+            imagenes: []
+          });
+          setImagePreviews([]);
+          setSubmitSuccess(false);
+          router.push('/dashboard');
+        }, 2000);
+      } else {
+        alert(result.error || 'Error al publicar');
+      }
     } catch (error) {
       console.error('Error submitting form:', error);
+      alert('Error inesperado al publicar');
     } finally {
       setIsSubmitting(false);
+      setUploadingImages(false);
     }
   };
 
@@ -142,6 +212,23 @@ export default function Publish() {
            formData.categoria &&
            formData.ubicacion.trim();
   };
+
+  // Mostrar loading mientras verifica autenticación
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-dark-500 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-text-soft">Verificando sesión...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // No mostrar nada si no está autenticado (está redirigiendo)
+  if (!user) {
+    return null;
+  }
 
   return (
     <>
@@ -439,7 +526,9 @@ export default function Publish() {
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                       </svg>
-                      Publicando...
+                      {uploadingImages 
+                        ? `Subiendo imágenes... ${uploadProgress}%` 
+                        : 'Publicando...'}
                     </div>
                   ) : (
                     'Publicar Producto'
