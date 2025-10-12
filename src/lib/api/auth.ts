@@ -304,6 +304,32 @@ export async function getUserProfile(userId: string) {
   }
 }
 
+/**
+ * Obtener perfil de usuario por email desde public.users
+ * 
+ * @param email Email del usuario
+ * @returns Perfil del usuario o null
+ */
+export async function getUserProfileByEmail(email: string) {
+  try {
+    const { data, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('email', email)
+      .single();
+
+    if (error) {
+      console.error('❌ Error obteniendo perfil por email:', error.message);
+      return null;
+    }
+
+    return data;
+  } catch (error: any) {
+    console.error('❌ Error inesperado en getUserProfileByEmail:', error);
+    return null;
+  }
+}
+
 // =========================================================================
 // EXPORTS
 // =========================================================================
