@@ -179,7 +179,7 @@ export function useMessages(options?: UseMessagesOptions) {
     });
 
     messageSubscriptionRef.current = unsubscribe;
-  }, [fetchConversations]);
+  }, []);
 
   /**
    * Suscribirse a nuevas conversaciones
@@ -198,7 +198,7 @@ export function useMessages(options?: UseMessagesOptions) {
     });
 
     conversationSubscriptionRef.current = unsubscribe;
-  }, [fetchConversations]);
+  }, []);
 
   // =========================================================================
   // EFECTOS
@@ -222,7 +222,7 @@ export function useMessages(options?: UseMessagesOptions) {
         conversationSubscriptionRef.current();
       }
     };
-  }, [autoFetch, fetchConversations, subscribeToNewConversations]);
+  }, [autoFetch]);
 
   /**
    * Suscribirse a mensajes cuando cambie la conversación actual
@@ -231,7 +231,7 @@ export function useMessages(options?: UseMessagesOptions) {
     if (currentConversationId) {
       subscribeToCurrentConversation(currentConversationId);
     }
-  }, [currentConversationId, subscribeToCurrentConversation]);
+  }, [currentConversationId]);
 
   // =========================================================================
   // FUNCIONES DE UTILIDAD
