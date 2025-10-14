@@ -8,87 +8,39 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useListings } from '@/lib/hooks/useListings';
+import { useMessages } from '@/lib/hooks/useMessages';
+import * as authApi from '@/lib/api/auth';
 
-// Datos de ejemplo para el dashboard
-const userStats = {
-  totalPublications: 8,
-  totalMessages: 24,
-  totalViews: 156,
-  totalContacts: 12
-};
+// Estadísticas calculadas dinámicamente desde datos reales
 
-const userPublications = [
-  {
-    id: '1',
-    titulo: 'Maquinaria Industrial CNC',
-    tipo: 'producto',
-    categoria: 'Maquinaria Industrial',
-    precio: 2500000,
-    vistas: 45,
-    contactos: 3,
-    estado: 'activo',
-    created_at: '2024-01-15T10:30:00Z'
-  },
-  {
-    id: '2',
-    titulo: 'Servicios de Diseño Industrial',
-    tipo: 'servicio',
-    categoria: 'Servicios de Diseño',
-    precio: null,
-    vistas: 32,
-    contactos: 5,
-    estado: 'activo',
-    created_at: '2024-01-14T15:45:00Z'
-  },
-  {
-    id: '3',
-    titulo: 'Componentes Electrónicos',
-    tipo: 'producto',
-    categoria: 'Electrónicos',
-    precio: 85000,
-    vistas: 28,
-    contactos: 2,
-    estado: 'activo',
-    created_at: '2024-01-13T09:20:00Z'
-  }
-];
+// Publicaciones reales obtenidas del hook useListings
 
-const recentMessages = [
-  {
-    id: '1',
-    sender: 'Carlos Mendoza',
-    company: 'AutoParts Solutions',
-    preview: 'Hola, estoy interesado en la máquina CNC que tienes publicada...',
-    timestamp: '2024-01-27T14:30:00Z',
-    unread: true
-  },
-  {
-    id: '2',
-    sender: 'María González',
-    company: 'Design Co.',
-    preview: '¿Podrías enviarme más información sobre los servicios de diseño?',
-    timestamp: '2024-01-27T11:15:00Z',
-    unread: false
-  },
-  {
-    id: '3',
-    sender: 'Roberto Silva',
-    company: 'TechMex Industries',
-    preview: 'Necesitamos cotización para 1000 componentes electrónicos',
-    timestamp: '2024-01-26T16:45:00Z',
-    unread: false
-  }
-];
+// Mensajes reales obtenidos del hook useMessages
 
 export default function Dashboard() {
   const router = useRouter();
-  const { user, userProfile, loading: authLoading } = useAuth();
+  const { user, userProfile, loading: authLoading, refreshUserProfile } = useAuth();
   const { listings, loading: listingsLoading, deleteListing, refreshListings } = useListings({
     userId: user?.id,
     autoFetch: false,  // Cargaremos manualmente cuando el user esté disponible
   });
+  const { conversations, loading: messagesLoading } = useMessages({
+    autoFetch: false,  // Cargaremos manualmente cuando el user esté disponible
+  });
   
   const [activeTab, setActiveTab] = useState('overview');
+  
+  // Estado del formulario de perfil
+  const [profileForm, setProfileForm] = useState({
+    nombre: '',
+    tipo: 'proveedor' as 'proveedor' | 'comprador' | 'freelancer',
+    descripcion: '',
+    ubicacion: '',
+    website: '',
+    telefono: ''
+  });
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [profileSaveSuccess, setProfileSaveSuccess] = useState(false);
 
   // Proteger ruta: redirigir a login si no está autenticado
   useEffect(() => {
@@ -97,12 +49,35 @@ export default function Dashboard() {
     }
   }, [user, authLoading, router]);
 
-  // Cargar listings cuando el usuario esté disponible
+  // Cargar datos cuando el usuario esté disponible
   useEffect(() => {
-    if (user) {
+    if (user?.id) {
       refreshListings();
+      // TODO: Agregar carga de mensajes cuando esté implementada
     }
-  }, [user]);
+  }, [user?.id, refreshListings]);
+
+  // Inicializar formulario con datos reales del usuario
+  useEffect(() => {
+    if (userProfile) {
+      setProfileForm({
+        nombre: userProfile.nombre || '',
+        tipo: userProfile.tipo || 'proveedor',
+        descripcion: userProfile.descripcion || '',
+        ubicacion: userProfile.ubicacion || '',
+        website: userProfile.website || '',
+        telefono: userProfile.telefono || ''
+      });
+    }
+  }, [userProfile]);
+
+  // Calcular estadísticas reales
+  const stats = {
+    totalPublications: listings.length,
+    totalMessages: conversations.length, // Por ahora usamos conversaciones como proxy
+    totalViews: 0, // TODO: Implementar contador de vistas cuando esté disponible en la BD
+    totalContacts: conversations.length, // Por ahora usamos conversaciones como proxy
+  };
 
   const formatDate = (date: string) => {
     return new Date(date).toLocaleDateString('es-MX', {
@@ -120,6 +95,54 @@ export default function Dashboard() {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(price);
+  };
+
+  // Handler para cambios en el formulario de perfil
+  const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setProfileForm(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  // Handler para guardar perfil
+  const handleProfileSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!user?.id) {
+      console.error('No hay usuario autenticado');
+      return;
+    }
+
+    setIsSavingProfile(true);
+    setProfileSaveSuccess(false);
+
+    try {
+      const result = await authApi.updateUserProfile(user.id, {
+        nombre: profileForm.nombre || undefined,
+        tipo: profileForm.tipo,
+        descripcion: profileForm.descripcion || undefined,
+        ubicacion: profileForm.ubicacion || undefined,
+        website: profileForm.website || undefined,
+        telefono: profileForm.telefono || undefined,
+      });
+
+      if (result.success) {
+        setProfileSaveSuccess(true);
+        // Refrescar el perfil del usuario en el contexto
+        await refreshUserProfile();
+        setTimeout(() => setProfileSaveSuccess(false), 3000);
+      } else {
+        console.error('Error guardando perfil:', result.error);
+        alert('Error al guardar el perfil: ' + result.error);
+      }
+    } catch (error: any) {
+      console.error('Error inesperado:', error);
+      alert('Error inesperado al guardar el perfil');
+    } finally {
+      setIsSavingProfile(false);
+    }
   };
 
   // Mostrar loading mientras verifica autenticación
@@ -223,9 +246,9 @@ export default function Dashboard() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                       </svg>
                       Mensajes
-                      {recentMessages.filter(m => m.unread).length > 0 && (
+                      {conversations.filter(c => c.unreadCount > 0).length > 0 && (
                         <span className="ml-auto bg-alert text-text-light text-xs font-medium px-2 py-1 rounded-full">
-                          {recentMessages.filter(m => m.unread).length}
+                          {conversations.filter(c => c.unreadCount > 0).length}
                         </span>
                       )}
                     </div>
@@ -276,7 +299,7 @@ export default function Dashboard() {
                     />
                     <StatCard
                       title="Mensajes Recibidos"
-                      value={userStats.totalMessages}
+                      value={stats.totalMessages}
                       color="text-success"
                       icon={
                         <svg className="w-6 h-6 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -286,7 +309,7 @@ export default function Dashboard() {
                     />
                     <StatCard
                       title="Visitas Totales"
-                      value={userStats.totalViews}
+                      value={stats.totalViews}
                       color="text-primary"
                       icon={
                         <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -297,7 +320,7 @@ export default function Dashboard() {
                     />
                     <StatCard
                       title="Contactos Generados"
-                      value={userStats.totalContacts}
+                      value={stats.totalContacts}
                       color="text-success"
                       icon={
                         <svg className="w-6 h-6 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -318,15 +341,15 @@ export default function Dashboard() {
                         </Link>
                       </div>
                       <div className="space-y-3">
-                        {userPublications.slice(0, 3).map((pub) => (
+                        {listings.slice(0, 3).map((pub) => (
                           <div key={pub.id} className="flex items-center justify-between p-3 bg-light-bg rounded-lg">
                             <div className="flex-1">
                               <p className="text-text-light font-medium text-sm">{pub.titulo}</p>
                               <p className="text-text-soft text-xs">{pub.categoria}</p>
                             </div>
                             <div className="text-right">
-                              <p className="text-text-light text-sm">{pub.vistas} vistas</p>
-                              <p className="text-text-soft text-xs">{pub.contactos} contactos</p>
+                              <p className="text-text-light text-sm">{pub.tipo}</p>
+                              <p className="text-text-soft text-xs">{pub.precio ? `$${pub.precio.toLocaleString()}` : 'Consultar precio'}</p>
                             </div>
                           </div>
                         ))}
@@ -342,21 +365,20 @@ export default function Dashboard() {
                         </Link>
                       </div>
                       <div className="space-y-3">
-                        {recentMessages.slice(0, 3).map((msg) => (
-                          <div key={msg.id} className={`p-3 rounded-lg ${msg.unread ? 'bg-primary bg-opacity-10' : 'bg-light-bg'}`}>
+                        {conversations.slice(0, 3).map((conversation) => (
+                          <div key={conversation.id} className={`p-3 rounded-lg ${conversation.unreadCount > 0 ? 'bg-primary bg-opacity-10' : 'bg-light-bg'}`}>
                             <div className="flex items-start justify-between">
                               <div className="flex-1">
                                 <div className="flex items-center">
-                                  <p className="text-text-light font-medium text-sm">{msg.sender}</p>
-                                  {msg.unread && (
+                                  <p className="text-text-light font-medium text-sm">{conversation.user.nombre || 'Usuario'}</p>
+                                  {conversation.unreadCount > 0 && (
                                     <div className="w-2 h-2 bg-alert rounded-full ml-2"></div>
                                   )}
                                 </div>
-                                <p className="text-text-soft text-xs">{msg.company}</p>
-                                <p className="text-text-soft text-xs mt-1 line-clamp-2">{msg.preview}</p>
+                                <p className="text-text-soft text-xs mt-1 line-clamp-2">{conversation.lastMessage.contenido}</p>
                               </div>
                               <p className="text-text-soft text-xs ml-2">
-                                {formatDate(msg.timestamp)}
+                                {formatDate(conversation.lastMessage.created_at)}
                               </p>
                             </div>
                           </div>
@@ -464,27 +486,26 @@ export default function Dashboard() {
                   <h2 className="text-2xl font-bold text-text-light">Mensajes</h2>
                   
                   <div className="space-y-4">
-                    {recentMessages.map((msg) => (
-                      <div key={msg.id} className={`card ${msg.unread ? 'border-l-4 border-primary' : ''}`}>
+                    {conversations.map((conversation) => (
+                      <div key={conversation.id} className={`card ${conversation.unreadCount > 0 ? 'border-l-4 border-primary' : ''}`}>
                         <div className="flex items-start justify-between">
                           <div className="flex items-start space-x-4">
                             <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center">
                               <span className="text-dark font-medium">
-                                {msg.sender.split(' ').map(n => n[0]).join('')}
+                                {(conversation.user.nombre || 'U').split(' ').map(n => n[0]).join('')}
                               </span>
                             </div>
                             <div className="flex-1">
                               <div className="flex items-center">
-                                <h3 className="text-text-light font-medium">{msg.sender}</h3>
-                                <span className="text-text-soft text-sm ml-2">• {msg.company}</span>
-                                {msg.unread && (
+                                <h3 className="text-text-light font-medium">{conversation.user.nombre || 'Usuario'}</h3>
+                                {conversation.unreadCount > 0 && (
                                   <span className="ml-2 bg-alert text-text-light text-xs font-medium px-2 py-1 rounded-full">
-                                    Nuevo
+                                    {conversation.unreadCount} nuevo{conversation.unreadCount > 1 ? 's' : ''}
                                   </span>
                                 )}
                               </div>
-                              <p className="text-text-soft text-sm mt-1">{msg.preview}</p>
-                              <p className="text-text-soft text-xs mt-2">{formatDate(msg.timestamp)}</p>
+                              <p className="text-text-soft text-sm mt-1">{conversation.lastMessage.contenido}</p>
+                              <p className="text-text-soft text-xs mt-2">{formatDate(conversation.lastMessage.created_at)}</p>
                             </div>
                           </div>
                           <button className="btn-outline text-sm">
@@ -502,7 +523,7 @@ export default function Dashboard() {
                   <h2 className="text-2xl font-bold text-text-light">Mi Perfil</h2>
                   
                   <div className="card">
-                    <form className="space-y-6">
+                    <form onSubmit={handleProfileSubmit} className="space-y-6">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                           <label className="block text-text-light font-medium mb-2">
@@ -510,15 +531,23 @@ export default function Dashboard() {
                           </label>
                           <input
                             type="text"
-                            defaultValue="MetalWorks México"
+                            name="nombre"
+                            value={profileForm.nombre}
+                            onChange={handleProfileChange}
                             className="input-field"
+                            placeholder="Nombre de tu empresa"
                           />
                         </div>
                         <div>
                           <label className="block text-text-light font-medium mb-2">
                             Tipo de Usuario
                           </label>
-                          <select className="select-field">
+                          <select 
+                            name="tipo"
+                            value={profileForm.tipo}
+                            onChange={handleProfileChange}
+                            className="select-field"
+                          >
                             <option value="proveedor">Proveedor</option>
                             <option value="comprador">Comprador</option>
                             <option value="freelancer">Freelancer</option>
@@ -531,8 +560,11 @@ export default function Dashboard() {
                           Descripción
                         </label>
                         <textarea
-                          defaultValue="Empresa especializada en maquinaria industrial CNC y servicios de fabricación de precisión."
+                          name="descripcion"
+                          value={profileForm.descripcion}
+                          onChange={handleProfileChange}
                           className="textarea-field h-24"
+                          placeholder="Describe tu empresa y servicios"
                         />
                       </div>
 
@@ -543,8 +575,11 @@ export default function Dashboard() {
                           </label>
                           <input
                             type="text"
-                            defaultValue="Guadalajara, Jalisco"
+                            name="ubicacion"
+                            value={profileForm.ubicacion}
+                            onChange={handleProfileChange}
                             className="input-field"
+                            placeholder="Ciudad, Estado"
                           />
                         </div>
                         <div>
@@ -553,18 +588,62 @@ export default function Dashboard() {
                           </label>
                           <input
                             type="url"
-                            defaultValue="https://metalworksmexico.com"
+                            name="website"
+                            value={profileForm.website}
+                            onChange={handleProfileChange}
                             className="input-field"
+                            placeholder="https://tu-sitio-web.com"
                           />
                         </div>
                       </div>
 
+                      <div>
+                        <label className="block text-text-light font-medium mb-2">
+                          Teléfono
+                        </label>
+                        <input
+                          type="tel"
+                          name="telefono"
+                          value={profileForm.telefono}
+                          onChange={handleProfileChange}
+                          className="input-field"
+                          placeholder="+52 55 1234 5678"
+                        />
+                      </div>
+
+                      {profileSaveSuccess && (
+                        <div className="bg-success bg-opacity-10 border border-success text-success px-4 py-3 rounded-lg">
+                          ✅ Perfil guardado exitosamente
+                        </div>
+                      )}
+                      
                       <div className="flex justify-end space-x-4">
-                        <button type="button" className="btn-outline">
+                        <button 
+                          type="button" 
+                          onClick={() => {
+                            // Resetear formulario a valores originales
+                            if (userProfile) {
+                              setProfileForm({
+                                nombre: userProfile.nombre || '',
+                                tipo: userProfile.tipo || 'proveedor',
+                                descripcion: userProfile.descripcion || '',
+                                ubicacion: userProfile.ubicacion || '',
+                                website: userProfile.website || '',
+                                telefono: userProfile.telefono || ''
+                              });
+                            }
+                          }}
+                          className="btn-outline"
+                          disabled={isSavingProfile}
+                        >
                           Cancelar
                         </button>
-                        <button type="submit" className="btn-primary">
-                          Guardar Cambios
+                        <button 
+                          type="submit" 
+                          className="btn-primary"
+                          disabled={isSavingProfile}
+                        >
+                          {isSavingProfile ? 'Guardando...' : 'Guardar Cambios'}
                         </button>
                       </div>
                     </form>

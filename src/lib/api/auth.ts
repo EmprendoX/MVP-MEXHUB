@@ -288,19 +288,38 @@ export async function updateUserProfile(
 export async function getUserProfile(userId: string) {
   try {
     console.log('🔍 Buscando perfil para ID:', userId);
+    
+    // Primero buscar por ID
     const { data, error } = await supabase
       .from('users')
       .select('*')
       .eq('id', userId)
       .single();
 
-    if (error) {
-      console.error('❌ Error obteniendo perfil:', error.message);
-      return null;
+    if (data) {
+      console.log('✅ Perfil encontrado por ID:', data);
+      return data;
     }
 
-    console.log('✅ Perfil encontrado:', data);
-    return data;
+    // Si no encuentra por ID, buscar por email del usuario autenticado
+    console.log('🔍 No encontrado por ID, buscando por email...');
+    const { data: userData } = await supabase.auth.getUser();
+    
+    if (userData?.user?.email) {
+      const { data: emailData, error: emailError } = await supabase
+        .from('users')
+        .select('*')
+        .eq('email', userData.user.email)
+        .single();
+
+      if (emailData) {
+        console.log('✅ Perfil encontrado por email:', emailData);
+        return emailData;
+      }
+    }
+
+    console.error('❌ Perfil no encontrado ni por ID ni por email');
+    return null;
   } catch (error: any) {
     console.error('❌ Error inesperado en getUserProfile:', error);
     return null;

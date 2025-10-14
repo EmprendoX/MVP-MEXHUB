@@ -142,7 +142,7 @@ export function useListings(options: UseListingsOptions = {}): UseListingsReturn
     if (autoFetch) {
       fetchListings();
     }
-  }, [autoFetch, fetchListings]);
+  }, [autoFetch, userId, tipo, categoria, ubicacion, priceMin, priceMax, searchQuery, limit]);
 
   /**
    * Crear nueva publicación
@@ -229,9 +229,9 @@ export function useListings(options: UseListingsOptions = {}): UseListingsReturn
   /**
    * Refrescar listings manualmente
    */
-  const refreshListings = async () => {
+  const refreshListings = useCallback(async () => {
     await fetchListings();
-  };
+  }, [fetchListings]);
 
   /**
    * Subir imagen
@@ -262,5 +262,7 @@ export function useListings(options: UseListingsOptions = {}): UseListingsReturn
 }
 
 export default useListings;
+
+
 
 

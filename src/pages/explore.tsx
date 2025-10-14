@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import Navbar from '@/components/Navbar';
@@ -172,6 +172,15 @@ export default function Explore() {
     }
   }, [router.query.q]);
 
+  // Memoizar dependencias para evitar re-renders innecesarios
+  const filterDependencies = useMemo(() => [
+    searchQuery,
+    JSON.stringify(filters.categories),
+    JSON.stringify(filters.locations),
+    JSON.stringify(filters.types),
+    JSON.stringify(filters.priceRange)
+  ], [searchQuery, filters.categories, filters.locations, filters.types, filters.priceRange]);
+
   // Cargar listings desde Supabase con filtros aplicados
   useEffect(() => {
     async function loadListings() {
@@ -207,7 +216,7 @@ export default function Explore() {
     }
 
     loadListings();
-  }, [searchQuery, filters]);
+  }, filterDependencies);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
