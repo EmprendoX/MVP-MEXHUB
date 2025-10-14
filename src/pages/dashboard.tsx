@@ -10,6 +10,26 @@ import { useAuth } from '@/lib/hooks/useAuth';
 import { useListings } from '@/lib/hooks/useListings';
 import { useMessages } from '@/lib/hooks/useMessages';
 import * as authApi from '@/lib/api/auth';
+import type { Listing } from '@/types/supabase';
+
+// Categorías y subcategorías para el formulario de edición
+const categories = [
+  'Maquinaria Industrial',
+  'Electrónica',
+  'Textiles',
+  'Automotriz',
+  'Construcción',
+  'Tecnología'
+];
+
+const subcategories = {
+  'Maquinaria Industrial': ['CNC', 'Herramientas', 'Equipos', 'Repuestos'],
+  'Electrónica': ['Componentes', 'Circuitos', 'Sensores', 'Dispositivos'],
+  'Textiles': ['Telas', 'Hilos', 'Accesorios', 'Maquinaria'],
+  'Automotriz': ['Piezas', 'Componentes', 'Ensamblaje', 'Servicios'],
+  'Construcción': ['Materiales', 'Herramientas', 'Equipos', 'Servicios'],
+  'Tecnología': ['Software', 'Hardware', 'IoT', 'Automatización']
+};
 
 // Estadísticas calculadas dinámicamente desde datos reales
 
@@ -20,8 +40,8 @@ import * as authApi from '@/lib/api/auth';
 export default function Dashboard() {
   const router = useRouter();
   const { user, userProfile, loading: authLoading, refreshUserProfile } = useAuth();
-  const { listings, loading: listingsLoading, deleteListing, refreshListings } = useListings({
-    userId: user?.id,
+  const { listings, loading: listingsLoading, deleteListing, updateListing, refreshListings } = useListings({
+    userId: userProfile?.id,
     autoFetch: false,  // Cargaremos manualmente cuando el user esté disponible
   });
   const { conversations, loading: messagesLoading } = useMessages({
@@ -42,6 +62,24 @@ export default function Dashboard() {
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [profileSaveSuccess, setProfileSaveSuccess] = useState(false);
 
+  // Estados para modal de edición de publicaciones
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingListing, setEditingListing] = useState<Listing | null>(null);
+  const [editForm, setEditForm] = useState({
+    titulo: '',
+    descripcion: '',
+    tipo: 'producto' as 'producto' | 'servicio',
+    categoria: '',
+    subcategoria: '',
+    precio: '',
+    ubicacion: '',
+    tiempoEntrega: '',
+    capacidad: '',
+    moq: '',
+    imagenes: [] as File[]
+  });
+  const [isUpdatingListing, setIsUpdatingListing] = useState(false);
+
   // Proteger ruta: redirigir a login si no está autenticado
   useEffect(() => {
     if (!authLoading && !user) {
@@ -51,11 +89,11 @@ export default function Dashboard() {
 
   // Cargar datos cuando el usuario esté disponible
   useEffect(() => {
-    if (user?.id) {
+    if (userProfile?.id) {
       refreshListings();
       // TODO: Agregar carga de mensajes cuando esté implementada
     }
-  }, [user?.id, refreshListings]);
+  }, [userProfile?.id, refreshListings]);
 
   // Inicializar formulario con datos reales del usuario
   useEffect(() => {
@@ -142,6 +180,92 @@ export default function Dashboard() {
       alert('Error inesperado al guardar el perfil');
     } finally {
       setIsSavingProfile(false);
+    }
+  };
+
+  // Handler para abrir modal de edición
+  const handleEditClick = (listing: Listing) => {
+    setEditingListing(listing);
+    
+    // Inicializar formulario con datos de la publicación
+    setEditForm({
+      titulo: listing.titulo || '',
+      descripcion: listing.descripcion || '',
+      tipo: listing.tipo || 'producto',
+      categoria: listing.categoria || '',
+      subcategoria: listing.subcategoria || '',
+      precio: listing.precio ? listing.precio.toString() : '',
+      ubicacion: listing.ubicacion || '',
+      tiempoEntrega: listing.tiempo_entrega || '',
+      capacidad: listing.capacidad || '',
+      moq: listing.moq || '',
+      imagenes: []
+    });
+    
+    setIsEditModalOpen(true);
+  };
+
+  // Handler para cerrar modal
+  const handleEditCancel = () => {
+    setIsEditModalOpen(false);
+    setEditingListing(null);
+    setEditForm({
+      titulo: '',
+      descripcion: '',
+      tipo: 'producto',
+      categoria: '',
+      subcategoria: '',
+      precio: '',
+      ubicacion: '',
+      tiempoEntrega: '',
+      capacidad: '',
+      moq: '',
+      imagenes: []
+    });
+  };
+
+  // Handler para guardar cambios
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!editingListing || !user?.id) {
+      console.error('No hay publicación seleccionada o usuario autenticado');
+      return;
+    }
+
+    setIsUpdatingListing(true);
+
+    try {
+      // Preparar datos para la API
+      const updateData = {
+        titulo: editForm.titulo || undefined,
+        descripcion: editForm.descripcion || undefined,
+        tipo: editForm.tipo,
+        categoria: editForm.categoria || undefined,
+        subcategoria: editForm.subcategoria || undefined,
+        precio: editForm.precio ? parseFloat(editForm.precio) : undefined,
+        ubicacion: editForm.ubicacion || undefined,
+        tiempo_entrega: editForm.tiempoEntrega || undefined,
+        capacidad: editForm.capacidad || undefined,
+        moq: editForm.moq || undefined,
+      };
+
+      const result = await updateListing(editingListing.id, updateData);
+
+      if (result.success) {
+        // Cerrar modal y refrescar lista
+        handleEditCancel();
+        await refreshListings();
+        alert('Publicación actualizada exitosamente');
+      } else {
+        console.error('Error actualizando publicación:', result.error);
+        alert('Error al actualizar la publicación: ' + result.error);
+      }
+    } catch (error: any) {
+      console.error('Error inesperado:', error);
+      alert('Error inesperado al actualizar la publicación');
+    } finally {
+      setIsUpdatingListing(false);
     }
   };
 
@@ -451,7 +575,10 @@ export default function Dashboard() {
                                 </td>
                                 <td className="py-3 px-4">
                                   <div className="flex space-x-2">
-                                    <button className="text-primary hover:text-primary-600 text-sm">
+                                    <button 
+                                      onClick={() => handleEditClick(listing)}
+                                      className="text-primary hover:text-primary-600 text-sm"
+                                    >
                                       Editar
                                     </button>
                                     <button 
@@ -656,6 +783,210 @@ export default function Dashboard() {
 
         {/* Footer */}
         <Footer />
+
+        {/* Modal de Edición de Publicación */}
+        {isEditModalOpen && editingListing && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-dark-400 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-bold text-text-light">Editar Publicación</h2>
+                  <button
+                    onClick={() => setIsEditModalOpen(false)}
+                    className="text-text-soft hover:text-text-light"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+
+                <form onSubmit={handleEditSubmit} className="space-y-6">
+                  {/* Información Básica */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-text-light font-medium mb-2">
+                        Título *
+                      </label>
+                      <input
+                        type="text"
+                        name="titulo"
+                        value={editForm.titulo}
+                        onChange={(e) => setEditForm(prev => ({ ...prev, titulo: e.target.value }))}
+                        className="input-field"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-text-light font-medium mb-2">
+                        Tipo *
+                      </label>
+                      <select
+                        name="tipo"
+                        value={editForm.tipo}
+                        onChange={(e) => setEditForm(prev => ({ ...prev, tipo: e.target.value as 'producto' | 'servicio' }))}
+                        className="select-field"
+                        required
+                      >
+                        <option value="producto">Producto</option>
+                        <option value="servicio">Servicio</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-text-light font-medium mb-2">
+                      Descripción *
+                    </label>
+                    <textarea
+                      name="descripcion"
+                      value={editForm.descripcion}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, descripcion: e.target.value }))}
+                      className="textarea-field h-24"
+                      required
+                    />
+                  </div>
+
+                  {/* Categorías */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-text-light font-medium mb-2">
+                        Categoría *
+                      </label>
+                      <select
+                        name="categoria"
+                        value={editForm.categoria}
+                        onChange={(e) => setEditForm(prev => ({ 
+                          ...prev, 
+                          categoria: e.target.value,
+                          subcategoria: '' // Reset subcategoría
+                        }))}
+                        className="select-field"
+                        required
+                      >
+                        <option value="">Seleccionar categoría</option>
+                        {categories.map(cat => (
+                          <option key={cat} value={cat}>{cat}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-text-light font-medium mb-2">
+                        Subcategoría
+                      </label>
+                      <select
+                        name="subcategoria"
+                        value={editForm.subcategoria}
+                        onChange={(e) => setEditForm(prev => ({ ...prev, subcategoria: e.target.value }))}
+                        className="select-field"
+                        disabled={!editForm.categoria}
+                      >
+                        <option value="">Seleccionar subcategoría</option>
+                        {editForm.categoria && subcategories[editForm.categoria as keyof typeof subcategories]?.map(subcat => (
+                          <option key={subcat} value={subcat}>{subcat}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Precio y Ubicación */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-text-light font-medium mb-2">
+                        Precio {editForm.tipo === 'servicio' ? '(por hora/proyecto)' : ''}
+                      </label>
+                      <input
+                        type="text"
+                        name="precio"
+                        value={editForm.precio}
+                        onChange={(e) => setEditForm(prev => ({ ...prev, precio: e.target.value }))}
+                        className="input-field"
+                        placeholder="Ej: $50,000 MXN o Consultar"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-text-light font-medium mb-2">
+                        Ubicación *
+                      </label>
+                      <input
+                        type="text"
+                        name="ubicacion"
+                        value={editForm.ubicacion}
+                        onChange={(e) => setEditForm(prev => ({ ...prev, ubicacion: e.target.value }))}
+                        className="input-field"
+                        placeholder="Ciudad, Estado"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  {/* Detalles Adicionales */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-text-light font-medium mb-2">
+                        Tiempo de entrega estimado
+                      </label>
+                      <input
+                        type="text"
+                        name="tiempoEntrega"
+                        value={editForm.tiempoEntrega}
+                        onChange={(e) => setEditForm(prev => ({ ...prev, tiempoEntrega: e.target.value }))}
+                        className="input-field"
+                        placeholder="Ej: 2-3 semanas"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-text-light font-medium mb-2">
+                        Capacidad de producción
+                      </label>
+                      <input
+                        type="text"
+                        name="capacidad"
+                        value={editForm.capacidad}
+                        onChange={(e) => setEditForm(prev => ({ ...prev, capacidad: e.target.value }))}
+                        className="input-field"
+                        placeholder="Ej: 1000 unidades/mes"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-text-light font-medium mb-2">
+                      MOQ (Mínimo de Orden)
+                    </label>
+                    <input
+                      type="text"
+                      name="moq"
+                      value={editForm.moq}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, moq: e.target.value }))}
+                      className="input-field"
+                      placeholder="Ej: 100 unidades"
+                    />
+                  </div>
+
+                  {/* Botones */}
+                  <div className="flex justify-end space-x-4 pt-6 border-t border-gray-light">
+                    <button
+                      type="button"
+                      onClick={handleEditCancel}
+                      className="btn-outline"
+                      disabled={isUpdatingListing}
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      type="submit"
+                      className="btn-primary"
+                      disabled={isUpdatingListing}
+                    >
+                      {isUpdatingListing ? 'Guardando...' : 'Guardar Cambios'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </>
   );
