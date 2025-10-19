@@ -1,0 +1,76 @@
+{
+  "meta": {
+    "title": "Publicar Producto - HUBMEX",
+    "description": "Publica tu producto o servicio en HUBMEX y conecta con compradores de todo el mundo."
+  },
+  "header": {
+    "title": "Publicar Producto o Servicio",
+    "description": "Comparte tu producto o servicio con compradores de todo el mundo y haz crecer tu negocio."
+  },
+  "notifications": {
+    "success": "¡Producto publicado exitosamente! Será visible en el directorio en unos minutos."
+  },
+  "form": {
+    "type": {
+      "label": "Tipo de Publicación *",
+      "product": {
+        "title": "Producto",
+        "description": "Artículos físicos o digitales"
+      },
+      "service": {
+        "title": "Servicio",
+        "description": "Consultoría, diseño, etc."
+      }
+    },
+    "title": {
+      "labelProduct": "Título del producto *",
+      "labelService": "Título del servicio *",
+      "placeholder": "Ej: Máquina CNC de 3 ejes"
+    },
+    "category": {
+      "label": "Categoría *",
+      "placeholder": "Seleccionar categoría"
+    },
+    "subcategory": {
+      "label": "Subcategoría",
+      "placeholder": "Seleccionar subcategoría"
+    },
+    "description": {
+      "label": "Descripción *",
+      "placeholder": "Describe detalladamente tu producto o servicio, incluyendo características principales, beneficios y especificaciones técnicas."
+    },
+    "images": {
+      "label": "Imágenes (máximo 5)",
+      "helper": "Haz clic para subir imágenes",
+      "formats": "PNG, JPG hasta 10MB cada una",
+      "previewAlt": "Vista previa {{index}}"
+    },
+    "price": {
+      "label": "Precio",
+      "serviceHint": "(por hora/proyecto)",
+      "placeholder": "Ej: $50,000 MXN o Consultar"
+    },
+    "location": {
+      "label": "Ubicación *",
+      "placeholder": "Ciudad, Estado"
+    },
+    "delivery": {
+      "label": "Tiempo de entrega estimado",
+      "placeholder": "Ej: 2-3 semanas"
+    },
+    "capacity": {
+      "label": "Capacidad de producción",
+      "placeholder": "Ej: 1000 unidades/mes"
+    },
+    "moq": {
+      "label": "Cantidad mínima de orden (MOQ)",
+      "placeholder": "Ej: 100 unidades"
+    },
+    "submit": {
+      "publishing": "Publicando...",
+      "uploading": "Subiendo imágenes... {{progress}}%",
+      "primary": "Publicar Producto",
+      "cancel": "Cancelar"
+    }
+  }
+}

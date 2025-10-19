@@ -1,0 +1,52 @@
+{
+  "meta": {
+    "title": "HUBMEX - Fabricantes y Servicios de México para el Mundo",
+    "description": "Conectamos a fabricantes mexicanos con emprendedores y compradores globales. Encuentra productos de calidad, servicios especializados y oportunidades de negocio."
+  },
+  "hero": {
+    "title": "Descubre fabricantes y servicios de {{country}} para el mundo",
+    "highlight": "México",
+    "subtitle": "Conectamos a fabricantes mexicanos con emprendedores y compradores globales. Encuentra productos de calidad, servicios especializados y oportunidades de negocio.",
+    "searchPlaceholder": "Buscar productos, servicios, fabricantes...",
+    "search": "Buscar",
+    "exploreProducts": "Explorar Productos",
+    "publishProduct": "Publicar Producto",
+    "stats": {
+      "manufacturers": "Fabricantes",
+      "products": "Productos",
+      "categories": "Categorías",
+      "availability": "Disponible"
+    }
+  },
+  "featured": {
+    "title": "Productos y Servicios",
+    "highlight": "Destacados",
+    "description": "Descubre las mejores oportunidades de manufactura y servicios especializados que México tiene para ofrecer al mundo."
+  },
+  "emptyFeatured": {
+    "title": "No hay productos destacados disponibles"
+  },
+  "cta": {
+    "title": "¿Eres Fabricante o Proveedor?",
+    "description": "Únete a nuestra plataforma y conecta con compradores de todo el mundo. Amplía tu mercado y haz crecer tu negocio."
+  },
+  "howItWorks": {
+    "title": "¿Cómo Funciona",
+    "highlight": "HUBMEX",
+    "description": "Conectamos a fabricantes mexicanos con compradores globales en 3 simples pasos.",
+    "steps": {
+      "explore": {
+        "title": "1. Explora",
+        "description": "Busca productos, servicios y fabricantes por categoría, ubicación o palabras clave."
+      },
+      "connect": {
+        "title": "2. Conecta",
+        "description": "Contacta directamente con los fabricantes y proveedores que más te interesen."
+      },
+      "negotiate": {
+        "title": "3. Negocia",
+        "description": "Establece acuerdos comerciales y haz crecer tu negocio con productos mexicanos."
+      }
+    }
+  }
+}

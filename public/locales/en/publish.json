@@ -1,0 +1,76 @@
+{
+  "meta": {
+    "title": "Publish Listing - HUBMEX",
+    "description": "Publish your product or service on HUBMEX and connect with buyers around the world."
+  },
+  "header": {
+    "title": "Publish a Product or Service",
+    "description": "Share your offering with buyers worldwide and grow your business."
+  },
+  "notifications": {
+    "success": "Listing published successfully! It will appear in the directory within a few minutes."
+  },
+  "form": {
+    "type": {
+      "label": "Listing Type *",
+      "product": {
+        "title": "Product",
+        "description": "Physical or digital items"
+      },
+      "service": {
+        "title": "Service",
+        "description": "Consulting, design, etc."
+      }
+    },
+    "title": {
+      "labelProduct": "Product title *",
+      "labelService": "Service title *",
+      "placeholder": "Ex: 3-axis CNC machine"
+    },
+    "category": {
+      "label": "Category *",
+      "placeholder": "Select category"
+    },
+    "subcategory": {
+      "label": "Subcategory",
+      "placeholder": "Select subcategory"
+    },
+    "description": {
+      "label": "Description *",
+      "placeholder": "Describe your product or service in detail, including main features, benefits, and technical specifications."
+    },
+    "images": {
+      "label": "Images (max 5)",
+      "helper": "Click to upload images",
+      "formats": "PNG, JPG up to 10MB each",
+      "previewAlt": "Preview {{index}}"
+    },
+    "price": {
+      "label": "Price",
+      "serviceHint": "(per hour/project)",
+      "placeholder": "Ex: $50,000 MXN or On request"
+    },
+    "location": {
+      "label": "Location *",
+      "placeholder": "City, State"
+    },
+    "delivery": {
+      "label": "Estimated delivery time",
+      "placeholder": "Ex: 2-3 weeks"
+    },
+    "capacity": {
+      "label": "Production capacity",
+      "placeholder": "Ex: 1000 units/month"
+    },
+    "moq": {
+      "label": "Minimum order quantity (MOQ)",
+      "placeholder": "Ex: 100 units"
+    },
+    "submit": {
+      "publishing": "Publishing...",
+      "uploading": "Uploading images... {{progress}}%",
+      "primary": "Publish Listing",
+      "cancel": "Cancel"
+    }
+  }
+}

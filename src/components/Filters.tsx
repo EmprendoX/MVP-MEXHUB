@@ -8,6 +8,7 @@ import {
   getSubcategoryById,
 } from '@/lib/catalog/serviceCategories';
 import type { ServiceTypeTag } from '@/lib/catalog/serviceCategories';
+import { useTranslation } from '@/contexts/TranslationContext';
 
 export interface FilterState {
   categories: string[];
@@ -60,6 +61,7 @@ const locations = [
 ];
 
 const Filters = ({ onFiltersChange, isOpen = false, onClose }: FiltersProps) => {
+  const { t, locale } = useTranslation('common');
   const [filters, setFilters] = useState<FilterState>({
     categories: [],
     subcategories: [],
@@ -187,7 +189,7 @@ const Filters = ({ onFiltersChange, isOpen = false, onClose }: FiltersProps) => 
   };
 
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('es-MX', {
+    return new Intl.NumberFormat(locale === 'en' ? 'en-US' : 'es-MX', {
       style: 'currency',
       currency: 'MXN',
       minimumFractionDigits: 0,
@@ -208,7 +210,7 @@ const Filters = ({ onFiltersChange, isOpen = false, onClose }: FiltersProps) => 
     <div className="space-y-6">
       {/* Service Types */}
       <div>
-        <h3 className="text-lg font-semibold text-text-light mb-4">Enfoque de servicio</h3>
+        <h3 className="text-lg font-semibold text-text-light mb-4">{t('filters.serviceTypes')}</h3>
         <div className="space-y-2">
           {SERVICE_TYPES.map((serviceType) => (
             <label key={serviceType} className="flex items-center justify-between">
@@ -228,7 +230,7 @@ const Filters = ({ onFiltersChange, isOpen = false, onClose }: FiltersProps) => 
 
       {/* Categories */}
       <div>
-        <h3 className="text-lg font-semibold text-text-light mb-4">Categorías</h3>
+        <h3 className="text-lg font-semibold text-text-light mb-4">{t('filters.categories')}</h3>
         <div className="space-y-3 max-h-48 overflow-y-auto pr-1">
           {serviceCatalog.map((category) => (
             <label key={category.id} className="flex items-start">
@@ -260,7 +262,7 @@ const Filters = ({ onFiltersChange, isOpen = false, onClose }: FiltersProps) => 
       {/* Subcategories */}
       {availableSubcategories.length > 0 && (
         <div>
-          <h3 className="text-lg font-semibold text-text-light mb-4">Subcategorías</h3>
+          <h3 className="text-lg font-semibold text-text-light mb-4">{t('filters.subcategories')}</h3>
           <div className="space-y-3 max-h-48 overflow-y-auto pr-1">
             {availableSubcategories.map((subcategory) => (
               <label key={subcategory.id} className="flex items-start">
@@ -282,7 +284,7 @@ const Filters = ({ onFiltersChange, isOpen = false, onClose }: FiltersProps) => 
 
       {/* Types */}
       <div>
-        <h3 className="text-lg font-semibold text-text-light mb-4">Tipo</h3>
+        <h3 className="text-lg font-semibold text-text-light mb-4">{t('filters.types')}</h3>
         <div className="space-y-2">
           {(['producto', 'servicio'] as const).map((type) => (
             <label key={type} className="flex items-center">
@@ -292,7 +294,9 @@ const Filters = ({ onFiltersChange, isOpen = false, onClose }: FiltersProps) => 
                 onChange={(e) => handleTypeChange(type, e.target.checked)}
                 className="w-4 h-4 text-primary bg-light-bg border-gray-light rounded focus:ring-primary focus:ring-2"
               />
-              <span className="ml-2 text-text-soft text-sm capitalize">{type}</span>
+              <span className="ml-2 text-text-soft text-sm">
+                {type === 'producto' ? t('filters.product') : t('filters.service')}
+              </span>
             </label>
           ))}
         </div>
@@ -300,7 +304,7 @@ const Filters = ({ onFiltersChange, isOpen = false, onClose }: FiltersProps) => 
 
       {/* Locations */}
       <div>
-        <h3 className="text-lg font-semibold text-text-light mb-4">Ubicación</h3>
+        <h3 className="text-lg font-semibold text-text-light mb-4">{t('filters.locations')}</h3>
         <div className="space-y-2 max-h-48 overflow-y-auto">
           {locations.map((location) => (
             <label key={location} className="flex items-center">
@@ -318,14 +322,12 @@ const Filters = ({ onFiltersChange, isOpen = false, onClose }: FiltersProps) => 
 
       {/* Price Range */}
       <div>
-        <h3 className="text-lg font-semibold text-text-light mb-4">
-          Rango de Precio
-        </h3>
+        <h3 className="text-lg font-semibold text-text-light mb-4">{t('filters.priceRange')}</h3>
         <div className="space-y-4">
           <div className="flex space-x-2">
             <input
               type="number"
-              placeholder="Mínimo"
+              placeholder={t('filters.min')}
               value={tempFilters.priceRange[0] || ''}
               onChange={(e) => handlePriceRangeChange([
                 parseInt(e.target.value) || 0,
@@ -335,7 +337,7 @@ const Filters = ({ onFiltersChange, isOpen = false, onClose }: FiltersProps) => 
             />
             <input
               type="number"
-              placeholder="Máximo"
+              placeholder={t('filters.max')}
               value={tempFilters.priceRange[1] || ''}
               onChange={(e) => handlePriceRangeChange([
                 tempFilters.priceRange[0],
@@ -352,17 +354,11 @@ const Filters = ({ onFiltersChange, isOpen = false, onClose }: FiltersProps) => 
 
       {/* Action Buttons */}
       <div className="flex flex-col space-y-2 pt-4 border-t border-gray-light">
-        <button
-          onClick={applyFilters}
-          className="btn-primary w-full"
-        >
-          Aplicar Filtros
+        <button onClick={applyFilters} className="btn-primary w-full">
+          {t('filters.apply')}
         </button>
-        <button
-          onClick={clearFilters}
-          className="btn-outline w-full"
-        >
-          Limpiar Filtros
+        <button onClick={clearFilters} className="btn-outline w-full">
+          {t('filters.clear')}
         </button>
       </div>
     </div>
@@ -373,7 +369,7 @@ const Filters = ({ onFiltersChange, isOpen = false, onClose }: FiltersProps) => 
       {/* Desktop Sidebar */}
       <div className="hidden md:block w-80 bg-light-bg border-r border-gray-light p-6 h-full overflow-y-auto">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-text-light">Filtros</h2>
+          <h2 className="text-xl font-bold text-text-light">{t('filters.title')}</h2>
           {getActiveFiltersCount() > 0 && (
             <span className="bg-primary text-dark text-xs font-medium px-2 py-1 rounded-full">
               {getActiveFiltersCount()}
@@ -389,7 +385,7 @@ const Filters = ({ onFiltersChange, isOpen = false, onClose }: FiltersProps) => 
           <div className="fixed inset-0 bg-dark-500 bg-opacity-50" onClick={onClose}></div>
           <div className="fixed top-0 left-0 w-80 h-full bg-light-bg p-6 overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-text-light">Filtros</h2>
+              <h2 className="text-xl font-bold text-text-light">{t('filters.title')}</h2>
               <button
                 onClick={onClose}
                 className="p-2 text-text-soft hover:text-text-light"
