@@ -59,7 +59,12 @@ export function useTranslation(namespace = 'common') {
   const context = useContext(TranslationContext);
 
   if (!context) {
-    throw new Error('useTranslation must be used within a TranslationProvider');
+    // Fallback para evitar errores durante hidratación
+    console.warn('useTranslation used outside TranslationProvider, using fallback');
+    return {
+      t: (key: string) => key, // Retorna la key como fallback
+      locale: 'es'
+    };
   }
 
   const t = (key: string, replacements?: Record<string, string | number>) =>

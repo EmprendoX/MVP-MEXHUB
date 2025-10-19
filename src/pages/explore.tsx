@@ -151,14 +151,14 @@ export default function Explore() {
           });
           setCurrentPage(pageToLoad);
         } else {
-          setError(result.error || t('error.title'));
+          setError(result.error || 'Error al cargar publicaciones');
           if (reset) {
             setListings([]);
             setHasMore(false);
           }
         }
       } catch (err: any) {
-        setError(err.message || tCommon('statuses.unexpectedError'));
+        setError(err.message || 'Error inesperado');
         if (reset) {
           setListings([]);
           setHasMore(false);
@@ -171,7 +171,7 @@ export default function Explore() {
         }
       }
     },
-    [apiFilters, t, tCommon]
+    [apiFilters]
   );
 
   useEffect(() => {
