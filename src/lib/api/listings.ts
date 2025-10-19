@@ -9,7 +9,7 @@
  *           tipo, precio, ubicacion, tiempo_entrega, capacidad, moq, imagenes
  */
 
-import { supabase } from '@/lib/supabaseClient';
+import { supabase, isSupabaseConfigured } from '@/lib/supabaseClient';
 import type {
   ListingInsert,
   ListingUpdate,
@@ -63,6 +63,20 @@ export interface ApiResponse<T = any> {
   success: boolean;
   data?: T;
   error?: string;
+}
+
+const SUPABASE_CONFIG_ERROR =
+  'Supabase no está configurado. Verifica NEXT_PUBLIC_SUPABASE_URL y NEXT_PUBLIC_SUPABASE_ANON_KEY.';
+
+function ensureSupabaseConfigured<T>(): ApiResponse<T> | null {
+  if (!isSupabaseConfigured) {
+    return {
+      success: false,
+      error: SUPABASE_CONFIG_ERROR,
+    };
+  }
+
+  return null;
 }
 
 // =========================================================================
@@ -122,6 +136,11 @@ export async function createListing(
   userId: string,
   data: CreateListingData
 ): Promise<ApiResponse<Listing>> {
+  const configError = ensureSupabaseConfigured<Listing>();
+  if (configError) {
+    return configError;
+  }
+
   try {
     // Validar que el título no esté vacío (NOT NULL en BD)
     if (!data.titulo || !data.titulo.trim()) {
@@ -205,6 +224,11 @@ export async function getListings(
   limit: number = 50,
   offset: number = 0
 ): Promise<ApiResponse<Listing[]>> {
+  const configError = ensureSupabaseConfigured<Listing[]>();
+  if (configError) {
+    return configError;
+  }
+
   try {
     let query = supabase
       .from('listings')
@@ -301,6 +325,11 @@ export async function getListingsWithProvider(
   limit: number = 50,
   offset: number = 0
 ): Promise<ApiResponse<ListingExploreView[]>> {
+  const configError = ensureSupabaseConfigured<ListingExploreView[]>();
+  if (configError) {
+    return configError;
+  }
+
   try {
     let query = supabase
       .from('v_listings_explore')
@@ -387,6 +416,14 @@ export async function getListingsWithProvider(
 export async function getFeaturedListingsForCards(
   limit: number = 6
 ): Promise<ApiResponse<CardItemListing[]>> {
+  if (!isSupabaseConfigured) {
+    console.warn('⚠️ Supabase no está configurado. Retornando destacados vacíos.');
+    return {
+      success: true,
+      data: [],
+    };
+  }
+
   try {
     const { data, error } = await supabase
       .from('v_listings_explore')
@@ -424,6 +461,11 @@ export async function getFeaturedListingsForCards(
  * @returns Publicación encontrada o null
  */
 export async function getListingById(id: string): Promise<ApiResponse<Listing>> {
+  const configError = ensureSupabaseConfigured<Listing>();
+  if (configError) {
+    return configError;
+  }
+
   try {
     const { data, error } = await supabase
       .from('listings')
@@ -459,6 +501,11 @@ export async function getListingById(id: string): Promise<ApiResponse<Listing>> 
  * @returns Lista de publicaciones del usuario
  */
 export async function getUserListings(userId: string): Promise<ApiResponse<Listing[]>> {
+  const configError = ensureSupabaseConfigured<Listing[]>();
+  if (configError) {
+    return configError;
+  }
+
   try {
     const { data, error } = await supabase
       .from('listings')
@@ -502,6 +549,11 @@ export async function updateListing(
   userId: string,
   data: UpdateListingData
 ): Promise<ApiResponse<Listing>> {
+  const configError = ensureSupabaseConfigured<Listing>();
+  if (configError) {
+    return configError;
+  }
+
   try {
     // Validar máximo 5 imágenes si se están actualizando
     if (data.imagenes && data.imagenes.length > 5) {
@@ -577,6 +629,11 @@ export async function deleteListing(
   id: string,
   userId: string
 ): Promise<ApiResponse> {
+  const configError = ensureSupabaseConfigured();
+  if (configError) {
+    return configError;
+  }
+
   try {
     const { error } = await supabase
       .from('listings')
@@ -618,6 +675,11 @@ export async function searchListings(
   searchQuery: string,
   limit: number = 50
 ): Promise<ApiResponse<Listing[]>> {
+  const configError = ensureSupabaseConfigured<Listing[]>();
+  if (configError) {
+    return configError;
+  }
+
   try {
     if (!searchQuery || !searchQuery.trim()) {
       return {
@@ -666,6 +728,11 @@ export async function searchListings(
 export async function countListings(
   filters?: ListingFilters
 ): Promise<ApiResponse<number>> {
+  const configError = ensureSupabaseConfigured<number>();
+  if (configError) {
+    return configError;
+  }
+
   try {
     let query = supabase
       .from('listings')
@@ -753,6 +820,11 @@ export async function uploadListingImage(
   file: File,
   userId: string
 ): Promise<ApiResponse<string>> {
+  const configError = ensureSupabaseConfigured<string>();
+  if (configError) {
+    return configError;
+  }
+
   try {
     // Validar tipo de archivo
     if (!file.type.startsWith('image/')) {
@@ -820,6 +892,11 @@ export async function uploadListingImage(
  * @returns Resultado de la operación
  */
 export async function deleteListingImage(imageUrl: string): Promise<ApiResponse> {
+  const configError = ensureSupabaseConfigured();
+  if (configError) {
+    return configError;
+  }
+
   try {
     // Extraer el path del archivo desde la URL
     const urlParts = imageUrl.split('/listings/');

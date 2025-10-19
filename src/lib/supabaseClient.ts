@@ -20,17 +20,11 @@ import type { Database } from '@/types/supabase';
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-if (!supabaseUrl) {
-  throw new Error(
-    '❌ NEXT_PUBLIC_SUPABASE_URL no está definida en .env.local\n' +
-    'Por favor, agrega: NEXT_PUBLIC_SUPABASE_URL=https://tu-proyecto.supabase.co'
-  );
-}
+export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
 
-if (!supabaseAnonKey) {
-  throw new Error(
-    '❌ NEXT_PUBLIC_SUPABASE_ANON_KEY no está definida en .env.local\n' +
-    'Por favor, agrega tu Anon Key desde Supabase Dashboard → Settings → API'
+if (!isSupabaseConfigured) {
+  console.warn(
+    '⚠️ Supabase no está configurado. Define NEXT_PUBLIC_SUPABASE_URL y NEXT_PUBLIC_SUPABASE_ANON_KEY para habilitar la base de datos.'
   );
 }
 
@@ -42,14 +36,18 @@ if (!supabaseAnonKey) {
  * Cliente de Supabase tipado para HUBMEX
  * Usa los tipos generados desde database.txt
  */
-export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
+export const supabase = createClient<Database>(
+  supabaseUrl || 'https://placeholder.supabase.co',
+  supabaseAnonKey || 'public-anon-key',
+  {
   auth: {
     persistSession: true,           // Mantener sesión en localStorage
     autoRefreshToken: true,          // Refrescar token automáticamente
     detectSessionInUrl: true,        // Detectar sesión en URL (para magic links)
     storageKey: 'hubmex-auth-token', // Key personalizada para localStorage
   },
-});
+}
+);
 
 // =========================================================================
 // HELPER FUNCTIONS
