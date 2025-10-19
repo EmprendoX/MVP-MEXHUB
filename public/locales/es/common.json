@@ -1,0 +1,107 @@
+{
+  "brandName": "HUBMEX",
+  "navigation": {
+    "home": "Inicio",
+    "explore": "Explorar",
+    "publish": "Publicar",
+    "messages": "Mensajes",
+    "dashboard": "Mi Cuenta"
+  },
+  "navbar": {
+    "search": "Buscar",
+    "searchPlaceholder": "Buscar productos, servicios, fabricantes...",
+    "openMenu": "Abrir menú",
+    "userDemo": "Usuario Demo",
+    "userRole": "Proveedor",
+    "language": "Idioma",
+    "languageName": {
+      "es": "Español",
+      "en": "Inglés"
+    }
+  },
+  "buttons": {
+    "viewAllProducts": "Ver Todos los Productos",
+    "publishProduct": "Publicar Producto",
+    "exploreOpportunities": "Explorar Oportunidades",
+    "exploreProducts": "Explorar Productos",
+    "retry": "Reintentar",
+    "clearSearch": "Limpiar búsqueda",
+    "loadMore": "Cargar más resultados",
+    "loadingMore": "Cargando más resultados..."
+  },
+  "card": {
+    "product": "Producto",
+    "service": "Servicio",
+    "priceRequest": "Consultar precio",
+    "contact": "Ver perfil / Contactar"
+  },
+  "filters": {
+    "title": "Filtros",
+    "mobileToggle": "Filtros",
+    "categories": "Categorías",
+    "subcategories": "Subcategorías",
+    "serviceTypes": "Tipos de servicio",
+    "locations": "Ubicaciones",
+    "types": "Tipos",
+    "priceRange": "Rango de precios",
+    "min": "Mínimo",
+    "max": "Máximo",
+    "apply": "Aplicar filtros",
+    "clear": "Limpiar filtros",
+    "product": "Producto",
+    "service": "Servicio"
+  },
+  "footer": {
+    "navigation": "Navegación",
+    "company": "Empresa",
+    "support": "Soporte",
+    "description": "Conectamos a fabricantes mexicanos con compradores globales. Descubre productos de calidad, servicios especializados y oportunidades de negocio en el ecosistema de manufactura mexicana.",
+    "madeInMexico": "Hecho en México",
+    "tagline": "para conectar al mundo con la manufactura mexicana de calidad.",
+    "rights": "Todos los derechos reservados.",
+    "legal": {
+      "terms": "Términos de servicio",
+      "privacy": "Política de privacidad",
+      "cookies": "Política de cookies",
+      "conditions": "Condiciones de uso"
+    },
+    "companyLinks": {
+      "about": "Acerca de HUBMEX",
+      "howItWorks": "Cómo funciona",
+      "pricing": "Precios",
+      "blog": "Blog",
+      "careers": "Carreras"
+    },
+    "supportLinks": {
+      "helpCenter": "Centro de ayuda",
+      "contact": "Contacto",
+      "status": "Estado del servicio",
+      "report": "Reportar problema",
+      "support": "Soporte técnico"
+    },
+    "navigationLinks": {
+      "messages": "Mensajes",
+      "publish": "Publicar",
+      "explore": "Explorar",
+      "dashboard": "Mi Cuenta",
+      "home": "Inicio"
+    }
+  },
+  "statuses": {
+    "loading": "Cargando...",
+    "checkingSession": "Verificando sesión...",
+    "loadingListings": "Cargando publicaciones...",
+    "noMoreResults": "No hay más resultados para mostrar.",
+    "noResults": "No se encontraron resultados",
+    "adjustFilters": "Intenta ajustar tus filtros o usar términos de búsqueda diferentes.",
+    "noFeatured": "No hay productos destacados disponibles",
+    "featuredDescription": "Estamos trabajando para mostrarte las mejores oportunidades de manufactura. Mientras tanto, explora el catálogo completo para descubrir nuevos proveedores.",
+    "successPublish": "¡Producto publicado exitosamente! Será visible en el directorio en unos minutos.",
+    "unexpectedError": "Error inesperado"
+  },
+  "forms": {
+    "required": "Este campo es obligatorio",
+    "maxImages": "Máximo 5 imágenes permitidas",
+    "mustLogin": "Debes iniciar sesión para publicar"
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "meta": {
+    "title": "Explore - HUBMEX | Products and Services from Mexico",
+    "description": "Browse products and services from Mexican manufacturers. Find machinery, electronic components, design services, and more."
+  },
+  "search": {
+    "mobileFilters": "Filters",
+    "results": "{{count}} result{{suffix}} found",
+    "forQuery": " for \"{{query}}\""
+  },
+  "sort": {
+    "label": "Sort by:",
+    "options": {
+      "recent": "Most recent",
+      "priceLow": "Price: low to high",
+      "priceHigh": "Price: high to low",
+      "name": "Name A-Z"
+    }
+  },
+  "error": {
+    "title": "Error loading listings"
+  },
+  "empty": {
+    "title": "No results found",
+    "description": "Try adjusting your filters or using different search terms."
+  },
+  "cta": {
+    "loadMore": "Load more results",
+    "loading": "Loading more results..."
+  }
+}

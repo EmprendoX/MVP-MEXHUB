@@ -1,0 +1,31 @@
+{
+  "meta": {
+    "title": "Explorar - HUBMEX | Productos y Servicios de México",
+    "description": "Explora productos y servicios de fabricantes mexicanos. Encuentra maquinaria, componentes electrónicos, servicios de diseño y más."
+  },
+  "search": {
+    "mobileFilters": "Filtros",
+    "results": "{{count}} resultado{{suffix}} encontrado{{suffix}}",
+    "forQuery": " para \"{{query}}\""
+  },
+  "sort": {
+    "label": "Ordenar por:",
+    "options": {
+      "recent": "Más recientes",
+      "priceLow": "Precio: menor a mayor",
+      "priceHigh": "Precio: mayor a menor",
+      "name": "Nombre A-Z"
+    }
+  },
+  "error": {
+    "title": "Error al cargar publicaciones"
+  },
+  "empty": {
+    "title": "No se encontraron resultados",
+    "description": "Intenta ajustar tus filtros o usar términos de búsqueda diferentes."
+  },
+  "cta": {
+    "loadMore": "Cargar más resultados",
+    "loading": "Cargando más resultados..."
+  }
+}

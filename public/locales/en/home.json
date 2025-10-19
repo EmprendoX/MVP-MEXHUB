@@ -1,0 +1,52 @@
+{
+  "meta": {
+    "title": "HUBMEX - Mexican Manufacturers and Services for the World",
+    "description": "We connect Mexican manufacturers with entrepreneurs and global buyers. Find quality products, specialized services, and new business opportunities."
+  },
+  "hero": {
+    "title": "Discover manufacturers and services from {{country}} for the world",
+    "highlight": "Mexico",
+    "subtitle": "We connect Mexican manufacturers with entrepreneurs and global buyers. Find quality products, specialized services, and business opportunities.",
+    "searchPlaceholder": "Search products, services, manufacturers...",
+    "search": "Search",
+    "exploreProducts": "Browse Products",
+    "publishProduct": "Publish Listing",
+    "stats": {
+      "manufacturers": "Manufacturers",
+      "products": "Products",
+      "categories": "Categories",
+      "availability": "Available"
+    }
+  },
+  "featured": {
+    "title": "Products and Services",
+    "highlight": "Highlights",
+    "description": "Discover the best manufacturing opportunities and specialized services that Mexico offers to the world."
+  },
+  "emptyFeatured": {
+    "title": "No featured listings available"
+  },
+  "cta": {
+    "title": "Are you a Manufacturer or Supplier?",
+    "description": "Join our platform and connect with buyers from around the world. Expand your market and grow your business."
+  },
+  "howItWorks": {
+    "title": "How Does",
+    "highlight": "HUBMEX",
+    "description": "We connect Mexican manufacturers with global buyers in 3 simple steps.",
+    "steps": {
+      "explore": {
+        "title": "1. Explore",
+        "description": "Search products, services, and manufacturers by category, location, or keywords."
+      },
+      "connect": {
+        "title": "2. Connect",
+        "description": "Reach out directly to the manufacturers and suppliers that interest you the most."
+      },
+      "negotiate": {
+        "title": "3. Negotiate",
+        "description": "Make business deals and grow your company with Mexican-made products."
+      }
+    }
+  }
+}
