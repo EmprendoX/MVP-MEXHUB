@@ -24,16 +24,39 @@ const normalizeEnvValue = (rawValue?: string | null): string | undefined => {
   }
 
   const trimmed = rawValue.trim();
+  const lowered = trimmed.toLowerCase();
 
-  if (!trimmed || trimmed.toLowerCase() === 'undefined' || trimmed.toLowerCase() === 'null') {
+  if (!trimmed || lowered === 'undefined' || lowered === 'null' || lowered === '""') {
     return undefined;
   }
 
   return trimmed;
 };
 
-const supabaseUrl = normalizeEnvValue(process.env.NEXT_PUBLIC_SUPABASE_URL ?? undefined);
-const supabaseAnonKey = normalizeEnvValue(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? undefined);
+const SUPABASE_URL_KEYS = [
+  'NEXT_PUBLIC_SUPABASE_URL',
+  'SUPABASE_URL',
+  'PUBLIC_SUPABASE_URL',
+];
+
+const SUPABASE_ANON_KEY_KEYS = [
+  'NEXT_PUBLIC_SUPABASE_ANON_KEY',
+  'SUPABASE_ANON_KEY',
+  'PUBLIC_SUPABASE_ANON_KEY',
+];
+
+const resolveEnvValue = (keys: string[]): string | undefined => {
+  for (const key of keys) {
+    const value = normalizeEnvValue(process.env[key]);
+    if (value) {
+      return value;
+    }
+  }
+  return undefined;
+};
+
+const supabaseUrl = resolveEnvValue(SUPABASE_URL_KEYS);
+const supabaseAnonKey = resolveEnvValue(SUPABASE_ANON_KEY_KEYS);
 
 export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
 
@@ -127,20 +150,29 @@ const looksLikeUndefined = (value?: string | null): boolean => {
     return false;
   }
 
-  return value.trim().toLowerCase() === 'undefined';
+  const lowered = value.trim().toLowerCase();
+  return lowered === 'undefined' || lowered === 'null' || lowered === '""';
 };
 
-if (!isSupabaseConfigured) {
-  const scope = typeof window === 'undefined' ? '[server]' : '[client]';
-  const rawUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const rawAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const createEnvDiagnostics = (keys: string[]) =>
+  keys.reduce<Record<string, { present: boolean; looksUndefined: boolean }>>((acc, key) => {
+    const rawValue = process.env[key];
+    acc[key] = {
+      present: typeof rawValue === 'string' && rawValue.trim().length > 0,
+      looksUndefined: looksLikeUndefined(rawValue),
+    };
+    return acc;
+  }, {});
 
+let hasLoggedMissingConfig = false;
+
+if (!isSupabaseConfigured && !hasLoggedMissingConfig) {
+  const scope = typeof window === 'undefined' ? '[server]' : '[client]';
   console.warn(`${scope} ${missingSupabaseConfigMessage}`, {
-    hasSupabaseUrl: typeof rawUrl === 'string' && rawUrl.trim().length > 0,
-    hasSupabaseAnonKey: typeof rawAnonKey === 'string' && rawAnonKey.trim().length > 0,
-    supabaseUrlLooksUndefined: looksLikeUndefined(rawUrl),
-    supabaseAnonKeyLooksUndefined: looksLikeUndefined(rawAnonKey),
+    urlCandidates: createEnvDiagnostics(SUPABASE_URL_KEYS),
+    anonKeyCandidates: createEnvDiagnostics(SUPABASE_ANON_KEY_KEYS),
   });
+  hasLoggedMissingConfig = true;
 }
 
 // =========================================================================
