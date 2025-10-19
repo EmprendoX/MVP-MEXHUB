@@ -4,18 +4,16 @@ import { useState, useEffect, useMemo } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import Navbar from '@/components/Navbar';
-import Filters from '@/components/Filters';
+import Filters, { FilterState } from '@/components/Filters';
 import CardItem from '@/components/CardItem';
 import Footer from '@/components/Footer';
 import * as listingsApi from '@/lib/api/listings';
 import type { ListingExploreView } from '@/types/supabase';
-
-interface FilterState {
-  categories: string[];
-  locations: string[];
-  types: ('producto' | 'servicio')[];
-  priceRange: [number, number];
-}
+import {
+  serviceCatalog,
+  getCategoryById,
+  getSubcategoryById,
+} from '@/lib/catalog/serviceCategories';
 
 // Datos de ejemplo expandidos para la página explore
 const allProducts = [
@@ -155,6 +153,8 @@ export default function Explore() {
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [filters, setFilters] = useState<FilterState>({
     categories: [],
+    subcategories: [],
+    serviceTypes: [],
     locations: [],
     types: [],
     priceRange: [0, 10000000]
@@ -176,10 +176,20 @@ export default function Explore() {
   const filterDependencies = useMemo(() => [
     searchQuery,
     JSON.stringify(filters.categories),
+    JSON.stringify(filters.subcategories),
+    JSON.stringify(filters.serviceTypes),
     JSON.stringify(filters.locations),
     JSON.stringify(filters.types),
     JSON.stringify(filters.priceRange)
-  ], [searchQuery, filters.categories, filters.locations, filters.types, filters.priceRange]);
+  ], [
+    searchQuery,
+    filters.categories,
+    filters.subcategories,
+    filters.serviceTypes,
+    filters.locations,
+    filters.types,
+    filters.priceRange,
+  ]);
 
   // Cargar listings desde Supabase con filtros aplicados
   useEffect(() => {
@@ -189,14 +199,43 @@ export default function Explore() {
 
       try {
         // Preparar filtros para la API
+        const categoryFiltersSet = new Set<string>();
+
+        filters.categories.forEach((categoryId) => {
+          const category = getCategoryById(categoryId);
+          if (category) {
+            categoryFiltersSet.add(category.name);
+          }
+        });
+
+        filters.subcategories.forEach((subcategoryId) => {
+          const info = getSubcategoryById(subcategoryId);
+          if (info) {
+            categoryFiltersSet.add(info.category.name);
+          }
+        });
+
+        if (filters.serviceTypes.length > 0) {
+          serviceCatalog.forEach((category) => {
+            if (category.serviceTypes.some((type) => filters.serviceTypes.includes(type))) {
+              categoryFiltersSet.add(category.name);
+            }
+          });
+        }
+
+        const categoryFilters = Array.from(categoryFiltersSet);
+
         const apiFilters: listingsApi.ListingFilters = {
           searchQuery: searchQuery.trim() || undefined,
           tipo: filters.types.length > 0 ? filters.types : undefined,
-          categoria: filters.categories.length > 0 ? filters.categories : undefined,
           ubicacion: filters.locations.length > 0 ? filters.locations : undefined,
           priceMin: filters.priceRange[0] > 0 ? filters.priceRange[0] : undefined,
           priceMax: filters.priceRange[1] < 10000000 ? filters.priceRange[1] : undefined,
         };
+
+        if (categoryFilters.length > 0) {
+          apiFilters.categoria = categoryFilters;
+        }
 
         // Usar la vista v_listings_explore que ya incluye datos del proveedor
         const result = await listingsApi.getListingsWithProvider(apiFilters, 100);
@@ -230,8 +269,10 @@ export default function Explore() {
   };
 
   const getActiveFiltersCount = () => {
-    return filters.categories.length + 
-           filters.locations.length + 
+    return filters.categories.length +
+           filters.subcategories.length +
+           filters.serviceTypes.length +
+           filters.locations.length +
            filters.types.length +
            (filters.priceRange[0] > 0 || filters.priceRange[1] < 10000000 ? 1 : 0);
   };
@@ -375,6 +416,8 @@ export default function Explore() {
                     setSearchQuery('');
                     setFilters({
                       categories: [],
+                      subcategories: [],
+                      serviceTypes: [],
                       locations: [],
                       types: [],
                       priceRange: [0, 10000000]

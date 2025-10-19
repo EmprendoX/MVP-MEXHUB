@@ -1,34 +1,28 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState, type Dispatch } from 'react';
+import {
+  serviceCatalog,
+  SERVICE_TYPES,
+  getSubcategoriesByCategoryId,
+  getSubcategoryById,
+} from '@/lib/catalog/serviceCategories';
+import type { ServiceTypeTag } from '@/lib/catalog/serviceCategories';
 
-interface FilterState {
+export interface FilterState {
   categories: string[];
+  subcategories: string[];
+  serviceTypes: ServiceTypeTag[];
   locations: string[];
   types: ('producto' | 'servicio')[];
   priceRange: [number, number];
 }
 
 interface FiltersProps {
-  onFiltersChange: (filters: FilterState) => void;
+  onFiltersChange: Dispatch<FilterState>;
   isOpen?: boolean;
   onClose?: () => void;
 }
-
-const categories = [
-  'Maquinaria Industrial',
-  'Electrónicos',
-  'Textiles',
-  'Servicios de Diseño',
-  'Logística',
-  'Consultoría',
-  'Metalúrgica',
-  'Química',
-  'Alimentaria',
-  'Automotriz',
-  'Construcción',
-  'Tecnología'
-];
 
 const locations = [
   'Aguascalientes',
@@ -68,6 +62,8 @@ const locations = [
 const Filters = ({ onFiltersChange, isOpen = false, onClose }: FiltersProps) => {
   const [filters, setFilters] = useState<FilterState>({
     categories: [],
+    subcategories: [],
+    serviceTypes: [],
     locations: [],
     types: [],
     priceRange: [0, 10000000] // 0 to 10M pesos
@@ -75,44 +71,99 @@ const Filters = ({ onFiltersChange, isOpen = false, onClose }: FiltersProps) => 
 
   const [tempFilters, setTempFilters] = useState<FilterState>(filters);
 
-  const handleCategoryChange = (category: string, checked: boolean) => {
-    const newCategories = checked
-      ? [...tempFilters.categories, category]
-      : tempFilters.categories.filter(c => c !== category);
-    
-    setTempFilters({
-      ...tempFilters,
-      categories: newCategories
+  const availableSubcategories = useMemo(() => {
+    return tempFilters.categories.flatMap((categoryId) =>
+      getSubcategoriesByCategoryId(categoryId).map((subcategory) => ({
+        ...subcategory,
+        categoryId,
+      }))
+    );
+  }, [tempFilters.categories]);
+
+  const handleCategoryChange = (categoryId: string, checked: boolean) => {
+    setTempFilters((prev) => {
+      const newCategories = checked
+        ? [...prev.categories, categoryId]
+        : prev.categories.filter((id) => id !== categoryId);
+
+      const allowedSubcategories = newCategories.flatMap((id) =>
+        getSubcategoriesByCategoryId(id).map((subcategory) => subcategory.id)
+      );
+
+      return {
+        ...prev,
+        categories: newCategories,
+        subcategories: prev.subcategories.filter((id) =>
+          allowedSubcategories.includes(id)
+        ),
+      };
+    });
+  };
+
+  const handleSubcategoryChange = (subcategoryId: string, checked: boolean) => {
+    setTempFilters((prev) => {
+      const newSubcategories = checked
+        ? [...prev.subcategories, subcategoryId]
+        : prev.subcategories.filter((id) => id !== subcategoryId);
+
+      const subcategoryInfo = getSubcategoryById(subcategoryId);
+      const categoryId = subcategoryInfo?.category.id;
+
+      return {
+        ...prev,
+        subcategories: newSubcategories,
+        categories:
+          checked && categoryId && !prev.categories.includes(categoryId)
+            ? [...prev.categories, categoryId]
+            : prev.categories,
+      };
+    });
+  };
+
+  const handleServiceTypeChange = (serviceType: ServiceTypeTag, checked: boolean) => {
+    setTempFilters((prev) => {
+      const newServiceTypes = checked
+        ? [...prev.serviceTypes, serviceType]
+        : prev.serviceTypes.filter((type) => type !== serviceType);
+
+      return {
+        ...prev,
+        serviceTypes: newServiceTypes,
+      };
     });
   };
 
   const handleLocationChange = (location: string, checked: boolean) => {
-    const newLocations = checked
-      ? [...tempFilters.locations, location]
-      : tempFilters.locations.filter(l => l !== location);
-    
-    setTempFilters({
-      ...tempFilters,
-      locations: newLocations
+    setTempFilters((prev) => {
+      const newLocations = checked
+        ? [...prev.locations, location]
+        : prev.locations.filter((l) => l !== location);
+
+      return {
+        ...prev,
+        locations: newLocations,
+      };
     });
   };
 
   const handleTypeChange = (type: 'producto' | 'servicio', checked: boolean) => {
-    const newTypes = checked
-      ? [...tempFilters.types, type]
-      : tempFilters.types.filter(t => t !== type);
-    
-    setTempFilters({
-      ...tempFilters,
-      types: newTypes
+    setTempFilters((prev) => {
+      const newTypes = checked
+        ? [...prev.types, type]
+        : prev.types.filter((t) => t !== type);
+
+      return {
+        ...prev,
+        types: newTypes,
+      };
     });
   };
 
   const handlePriceRangeChange = (newRange: [number, number]) => {
-    setTempFilters({
-      ...tempFilters,
-      priceRange: newRange
-    });
+    setTempFilters((prev) => ({
+      ...prev,
+      priceRange: newRange,
+    }));
   };
 
   const applyFilters = () => {
@@ -124,9 +175,11 @@ const Filters = ({ onFiltersChange, isOpen = false, onClose }: FiltersProps) => 
   const clearFilters = () => {
     const clearedFilters: FilterState = {
       categories: [],
+      subcategories: [],
+      serviceTypes: [],
       locations: [],
       types: [],
-      priceRange: [0, 10000000]
+      priceRange: [0, 10000000],
     };
     setTempFilters(clearedFilters);
     setFilters(clearedFilters);
@@ -143,31 +196,89 @@ const Filters = ({ onFiltersChange, isOpen = false, onClose }: FiltersProps) => 
   };
 
   const getActiveFiltersCount = () => {
-    return filters.categories.length + 
-           filters.locations.length + 
+    return filters.categories.length +
+           filters.subcategories.length +
+           filters.serviceTypes.length +
+           filters.locations.length +
            filters.types.length +
            (filters.priceRange[0] > 0 || filters.priceRange[1] < 10000000 ? 1 : 0);
   };
 
   const FilterContent = () => (
     <div className="space-y-6">
-      {/* Categories */}
+      {/* Service Types */}
       <div>
-        <h3 className="text-lg font-semibold text-text-light mb-4">Categorías</h3>
-        <div className="space-y-2 max-h-48 overflow-y-auto">
-          {categories.map((category) => (
-            <label key={category} className="flex items-center">
-              <input
-                type="checkbox"
-                checked={tempFilters.categories.includes(category)}
-                onChange={(e) => handleCategoryChange(category, e.target.checked)}
-                className="w-4 h-4 text-primary bg-light-bg border-gray-light rounded focus:ring-primary focus:ring-2"
-              />
-              <span className="ml-2 text-text-soft text-sm">{category}</span>
+        <h3 className="text-lg font-semibold text-text-light mb-4">Enfoque de servicio</h3>
+        <div className="space-y-2">
+          {SERVICE_TYPES.map((serviceType) => (
+            <label key={serviceType} className="flex items-center justify-between">
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={tempFilters.serviceTypes.includes(serviceType)}
+                  onChange={(e) => handleServiceTypeChange(serviceType, e.target.checked)}
+                  className="w-4 h-4 text-primary bg-light-bg border-gray-light rounded focus:ring-primary focus:ring-2"
+                />
+                <span className="ml-2 text-text-soft text-sm">{serviceType}</span>
+              </div>
             </label>
           ))}
         </div>
       </div>
+
+      {/* Categories */}
+      <div>
+        <h3 className="text-lg font-semibold text-text-light mb-4">Categorías</h3>
+        <div className="space-y-3 max-h-48 overflow-y-auto pr-1">
+          {serviceCatalog.map((category) => (
+            <label key={category.id} className="flex items-start">
+              <input
+                type="checkbox"
+                checked={tempFilters.categories.includes(category.id)}
+                onChange={(e) => handleCategoryChange(category.id, e.target.checked)}
+                className="w-4 h-4 text-primary bg-light-bg border-gray-light rounded focus:ring-primary focus:ring-2"
+              />
+              <span className="ml-2 text-text-soft text-sm">
+                <span className="block text-text-light font-medium">{category.name}</span>
+                <span className="block text-xs text-text-soft/80">{category.description}</span>
+                <span className="mt-1 flex flex-wrap gap-1">
+                  {category.serviceTypes.map((type) => (
+                    <span
+                      key={`${category.id}-${type}`}
+                      className="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-[10px] uppercase tracking-wide text-primary"
+                    >
+                      {type}
+                    </span>
+                  ))}
+                </span>
+              </span>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      {/* Subcategories */}
+      {availableSubcategories.length > 0 && (
+        <div>
+          <h3 className="text-lg font-semibold text-text-light mb-4">Subcategorías</h3>
+          <div className="space-y-3 max-h-48 overflow-y-auto pr-1">
+            {availableSubcategories.map((subcategory) => (
+              <label key={subcategory.id} className="flex items-start">
+                <input
+                  type="checkbox"
+                  checked={tempFilters.subcategories.includes(subcategory.id)}
+                  onChange={(e) => handleSubcategoryChange(subcategory.id, e.target.checked)}
+                  className="w-4 h-4 text-primary bg-light-bg border-gray-light rounded focus:ring-primary focus:ring-2"
+                />
+                <span className="ml-2 text-text-soft text-sm">
+                  <span className="block text-text-light font-medium">{subcategory.name}</span>
+                  <span className="block text-xs text-text-soft/80">{subcategory.description}</span>
+                </span>
+              </label>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Types */}
       <div>
