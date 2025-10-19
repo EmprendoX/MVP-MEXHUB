@@ -45,12 +45,28 @@ export interface ConversationSummary {
  * @returns Resultado de la operación
  */
 export async function createMessage(
-  messageData: Omit<MessageInsert, 'id' | 'created_at'>
+  messageData: Omit<MessageInsert, 'id' | 'created_at' | 'sender_id'>
 ): Promise<APIResult<Message>> {
   try {
+    // Obtener usuario autenticado
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      return {
+        success: false,
+        error: 'Usuario no autenticado',
+      };
+    }
+
+    // Agregar sender_id automáticamente
+    const fullMessageData = {
+      ...messageData,
+      sender_id: user.id,
+    };
+
     const { data, error } = await supabase
       .from('messages')
-      .insert([messageData])
+      .insert([fullMessageData])
       .select()
       .single();
 

@@ -103,7 +103,6 @@ export function useMessages(options?: UseMessagesOptions) {
     
     try {
       const result = await messagesApi.createMessage({
-        sender_id: '', // Se llenará automáticamente en la API
         receiver_id: receiverId,
         contenido: content.trim(),
       });

@@ -7,153 +7,9 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useMessages } from '@/lib/hooks/useMessages';
+import type { Message } from '@/types/supabase';
+import type { ConversationSummary } from '@/lib/api/messages';
 
-interface Message {
-  id: string;
-  sender_id: string;
-  receiver_id: string;
-  contenido: string;
-  created_at: string;
-}
-
-interface Conversation {
-  id: string;
-  user: {
-    id: string;
-    nombre: string | null;
-    avatar_url?: string | null;
-    company?: string; // Hacer opcional para compatibilidad
-  };
-  lastMessage: {
-    id: string;
-    sender_id: string;
-    receiver_id: string;
-    contenido: string;
-    created_at: string;
-  };
-  unreadCount: number;
-  product?: {
-    id: string;
-    titulo: string;
-  } | null;
-}
-
-// Datos de ejemplo para conversaciones
-const conversations: Conversation[] = [
-  {
-    id: '1',
-    user: {
-      id: 'user-1',
-      nombre: 'Carlos Mendoza',
-      company: 'AutoParts Solutions'
-    },
-    lastMessage: {
-      id: 'msg-1',
-      sender_id: 'user-1',
-      receiver_id: 'current-user',
-      contenido: 'Hola, estoy interesado en la máquina CNC que tienes publicada. ¿Podrías enviarme más información técnica?',
-      created_at: '2024-01-27T14:30:00Z'
-    },
-    unreadCount: 2,
-    product: {
-      id: 'prod-1',
-      titulo: 'Maquinaria Industrial CNC'
-    }
-  },
-  {
-    id: '2',
-    user: {
-      id: 'user-2',
-      nombre: 'María González',
-      company: 'Design Co.'
-    },
-    lastMessage: {
-      id: 'msg-2',
-      sender_id: 'current-user',
-      receiver_id: 'user-2',
-      contenido: 'Perfecto, te envío la información detallada por email.',
-      created_at: '2024-01-27T11:15:00Z'
-    },
-    unreadCount: 0,
-    product: {
-      id: 'prod-2',
-      titulo: 'Servicios de Diseño Industrial'
-    }
-  },
-  {
-    id: '3',
-    user: {
-      id: 'user-3',
-      nombre: 'Roberto Silva',
-      company: 'TechMex Industries'
-    },
-    lastMessage: {
-      id: 'msg-3',
-      sender_id: 'user-3',
-      receiver_id: 'current-user',
-      contenido: 'Necesitamos cotización para 1000 componentes electrónicos. ¿Cuál sería el precio por unidad?',
-      created_at: '2024-01-26T16:45:00Z'
-    },
-    unreadCount: 0,
-    product: {
-      id: 'prod-3',
-      titulo: 'Componentes Electrónicos'
-    }
-  },
-  {
-    id: '4',
-    user: {
-      id: 'user-4',
-      nombre: 'Ana López',
-      company: 'Manufacturing Plus'
-    },
-    lastMessage: {
-      id: 'msg-4',
-      sender_id: 'user-4',
-      receiver_id: 'current-user',
-      contenido: '¿Tienes disponibilidad para una consultoría de procesos el próximo mes?',
-      created_at: '2024-01-25T09:20:00Z'
-    },
-    unreadCount: 1
-  }
-];
-
-// Datos de ejemplo para mensajes de una conversación específica
-const getMessagesForConversation = (conversationId: string): Message[] => {
-  if (conversationId === '1') {
-    return [
-      {
-        id: 'msg-1-1',
-        sender_id: 'user-1',
-        receiver_id: 'current-user',
-        contenido: 'Hola, vi tu publicación de la máquina CNC. Me interesa mucho.',
-        created_at: '2024-01-27T14:00:00Z'
-      },
-      {
-        id: 'msg-1-2',
-        sender_id: 'current-user',
-        receiver_id: 'user-1',
-        contenido: '¡Hola Carlos! Me da mucho gusto que te interese. ¿En qué te puedo ayudar?',
-        created_at: '2024-01-27T14:05:00Z'
-      },
-      {
-        id: 'msg-1-3',
-        sender_id: 'user-1',
-        receiver_id: 'current-user',
-        contenido: 'Necesito información técnica detallada: especificaciones, capacidades de corte, software incluido, etc.',
-        created_at: '2024-01-27T14:10:00Z'
-      },
-      {
-        id: 'msg-1-4',
-        sender_id: 'user-1',
-        receiver_id: 'current-user',
-        contenido: 'Hola, estoy interesado en la máquina CNC que tienes publicada. ¿Podrías enviarme más información técnica?',
-        created_at: '2024-01-27T14:30:00Z'
-      }
-    ];
-  }
-  return [];
-};
 
 export default function Messages() {
   const router = useRouter();
@@ -171,6 +27,7 @@ export default function Messages() {
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
   const [newMessage, setNewMessage] = useState('');
   const [isMobileView, setIsMobileView] = useState(false);
+  const [targetUserId, setTargetUserId] = useState<string | null>(null);
 
   // Proteger ruta: redirigir a login si no está autenticado
   useEffect(() => {
@@ -178,6 +35,31 @@ export default function Messages() {
       router.push('/login');
     }
   }, [user, authLoading, router]);
+
+  // Manejar query params para iniciar conversación
+  useEffect(() => {
+    const { userId } = router.query;
+    if (userId && typeof userId === 'string') {
+      setTargetUserId(userId);
+      
+      // Buscar conversación existente con este usuario
+      const existingConversation = conversations.find(conv => 
+        conv.user.id === userId
+      );
+      
+      if (existingConversation) {
+        // Si existe la conversación, seleccionarla
+        setSelectedConversation(existingConversation.id);
+        selectConversation(existingConversation.id);
+      } else {
+        // Si no existe, preparar para crear una nueva conversación
+        setSelectedConversation(null);
+      }
+      
+      // Limpiar query params después de procesarlos
+      router.replace('/messages', undefined, { shallow: true });
+    }
+  }, [router.query, conversations, selectConversation, router]);
 
   const selectedConv = conversations.find(c => c.id === selectedConversation);
   const currentMessages = messages; // Usar mensajes reales del hook
@@ -226,17 +108,29 @@ export default function Messages() {
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (newMessage.trim() && selectedConversation) {
-      const result = await sendMessage(selectedConversation, newMessage);
-      if (result.success) {
-        setNewMessage('');
-      } else {
-        console.error('Error enviando mensaje:', result.error);
+    if (newMessage.trim()) {
+      if (selectedConversation) {
+        // Enviar mensaje a conversación existente
+        const result = await sendMessage(selectedConversation, newMessage);
+        if (result.success) {
+          setNewMessage('');
+        } else {
+          console.error('Error enviando mensaje:', result.error);
+        }
+      } else if (targetUserId) {
+        // Crear nueva conversación enviando primer mensaje
+        const result = await sendMessage(targetUserId, newMessage);
+        if (result.success) {
+          setNewMessage('');
+          // La conversación se creará automáticamente
+        } else {
+          console.error('Error enviando mensaje:', result.error);
+        }
       }
     }
   };
 
-  const ConversationItem = ({ conversation }: { conversation: Conversation }) => (
+  const ConversationItem = ({ conversation }: { conversation: ConversationSummary }) => (
     <div
       onClick={() => {
         setSelectedConversation(conversation.id);
@@ -264,17 +158,9 @@ export default function Messages() {
               {formatTime(conversation.lastMessage.created_at)}
             </span>
           </div>
-          <p className="text-text-soft text-sm truncate">
-            {conversation.user.company || 'Usuario'}
-          </p>
           <p className="text-text-soft text-sm truncate mt-1">
             {conversation.lastMessage.contenido}
           </p>
-          {conversation.product && (
-            <p className="text-primary text-xs truncate mt-1">
-              Re: {conversation.product.titulo}
-            </p>
-          )}
           {conversation.unreadCount > 0 && (
             <div className="flex justify-end mt-2">
               <span className="bg-primary text-dark text-xs font-medium px-2 py-1 rounded-full">
@@ -429,6 +315,70 @@ export default function Messages() {
                     <button
                       type="submit"
                       className="btn-primary px-6"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                      </svg>
+                    </button>
+                  </form>
+                </div>
+              </>
+            ) : targetUserId ? (
+              /* New Conversation with Target User */
+              <>
+                {/* Chat Header for New Conversation */}
+                <div className="bg-light-bg border-b border-gray-light p-4 flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    {/* Mobile back button */}
+                    <button
+                      onClick={() => setIsMobileView(true)}
+                      className="md:hidden p-2 text-text-soft hover:text-text-light"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                      </svg>
+                    </button>
+                    
+                    <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
+                      <span className="text-dark font-medium">U</span>
+                    </div>
+                    <div>
+                      <h3 className="text-text-light font-medium">Nueva conversación</h3>
+                      <p className="text-text-soft text-sm">Inicia una conversación</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* New Conversation Messages Area */}
+                <div className="flex-1 flex items-center justify-center">
+                  <div className="text-center max-w-md">
+                    <svg className="w-16 h-16 text-primary mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                    </svg>
+                    <h3 className="text-xl font-semibold text-text-light mb-2">
+                      Inicia la conversación
+                    </h3>
+                    <p className="text-text-soft mb-6">
+                      Envía tu primer mensaje para comenzar una nueva conversación
+                    </p>
+                  </div>
+                </div>
+
+                {/* Message Input for New Conversation */}
+                <div className="bg-light-bg border-t border-gray-light p-4">
+                  <form onSubmit={handleSendMessage} className="flex space-x-4">
+                    <input
+                      type="text"
+                      value={newMessage}
+                      onChange={(e) => setNewMessage(e.target.value)}
+                      placeholder="Escribe tu mensaje..."
+                      className="flex-1 bg-dark-500 border border-gray-light rounded-lg px-4 py-3 text-text-light placeholder-text-soft focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                      autoFocus
+                    />
+                    <button
+                      type="submit"
+                      disabled={!newMessage.trim()}
+                      className="bg-primary text-dark px-6 py-3 rounded-lg font-medium hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />

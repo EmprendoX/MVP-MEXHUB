@@ -9,11 +9,13 @@ import CardItem from '@/components/CardItem';
 import Footer from '@/components/Footer';
 import { getUserProfile } from '@/lib/api/auth';
 import { useListings } from '@/lib/hooks/useListings';
+import { useAuth } from '@/lib/hooks/useAuth';
 import type { User } from '@/types/supabase';
 
 export default function Profile() {
   const router = useRouter();
   const { id } = router.query;
+  const { user } = useAuth();
   const [profile, setProfile] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'all' | 'productos' | 'servicios'>('all');
@@ -92,6 +94,25 @@ export default function Profile() {
     }
   };
 
+  // Función para manejar el contacto
+  const handleContact = () => {
+    // Verificar que el usuario esté autenticado
+    if (!user) {
+      // Redirigir a login si no está autenticado
+      router.push('/login');
+      return;
+    }
+
+    // Verificar que no sea el mismo usuario
+    if (user.id === profile?.id) {
+      alert('No puedes contactarte a ti mismo');
+      return;
+    }
+
+    // Redirigir a mensajes con el ID del usuario
+    router.push(`/messages?userId=${profile?.id}`);
+  };
+
   return (
     <>
       <Head>
@@ -140,7 +161,10 @@ export default function Profile() {
                   </div>
                   
                   <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
-                    <button className="btn-primary">
+                    <button 
+                      onClick={handleContact}
+                      className="btn-primary"
+                    >
                       <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                       </svg>
