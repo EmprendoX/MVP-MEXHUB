@@ -4,108 +4,15 @@ import Navbar from '@/components/Navbar';
 import Hero from '@/components/Hero';
 import CardItem from '@/components/CardItem';
 import Footer from '@/components/Footer';
+import type { GetStaticProps } from 'next';
+import { getFeaturedListingsForCards } from '@/lib/api/listings';
+import type { CardItemListing } from '@/lib/api/listings';
 
-// Datos de ejemplo para productos destacados
-const featuredProducts = [
-  {
-    id: '1',
-    titulo: 'Maquinaria Industrial CNC',
-    descripcion: 'Máquinas CNC de alta precisión para la industria manufacturera. Fabricación de piezas metálicas y plásticas con tecnología de vanguardia.',
-    categoria: 'Maquinaria Industrial',
-    tipo: 'producto' as const,
-    precio: 2500000,
-    ubicacion: 'Guadalajara, Jalisco',
-        imagenes: ['/placeholder.svg'],
-    proveedor: {
-      id: 'prov-1',
-      nombre: 'MetalWorks México',
-      avatar_url: undefined
-    },
-    created_at: '2024-01-15T10:30:00Z'
-  },
-  {
-    id: '2',
-    titulo: 'Servicios de Diseño Industrial',
-    descripcion: 'Diseño y desarrollo de productos industriales. Desde conceptualización hasta prototipado y manufactura.',
-    categoria: 'Servicios de Diseño',
-    tipo: 'servicio' as const,
-    precio: undefined,
-    ubicacion: 'Monterrey, Nuevo León',
-        imagenes: ['/placeholder.svg'],
-    proveedor: {
-      id: 'prov-2',
-      nombre: 'DesignTech Solutions',
-      avatar_url: undefined
-    },
-    created_at: '2024-01-14T15:45:00Z'
-  },
-  {
-    id: '3',
-    titulo: 'Componentes Electrónicos',
-    descripcion: 'Fabricación de componentes electrónicos para la industria automotriz y de telecomunicaciones.',
-    categoria: 'Electrónicos',
-    tipo: 'producto' as const,
-    precio: 85000,
-    ubicacion: 'Tijuana, Baja California',
-        imagenes: ['/placeholder.svg'],
-    proveedor: {
-      id: 'prov-3',
-      nombre: 'ElectroMex Components',
-      avatar_url: undefined
-    },
-    created_at: '2024-01-13T09:20:00Z'
-  },
-  {
-    id: '4',
-    titulo: 'Servicios de Logística',
-    descripcion: 'Soluciones logísticas integrales para la exportación e importación de productos manufacturados.',
-    categoria: 'Logística',
-    tipo: 'servicio' as const,
-    precio: undefined,
-    ubicacion: 'Ciudad de México',
-        imagenes: ['/placeholder.svg'],
-    proveedor: {
-      id: 'prov-4',
-      nombre: 'LogiMex International',
-      avatar_url: undefined
-    },
-    created_at: '2024-01-12T14:15:00Z'
-  },
-  {
-    id: '5',
-    titulo: 'Textiles Industriales',
-    descripcion: 'Fabricación de textiles especializados para la industria automotriz, médica y de construcción.',
-    categoria: 'Textiles',
-    tipo: 'producto' as const,
-    precio: 450000,
-    ubicacion: 'Puebla, Puebla',
-        imagenes: ['/placeholder.svg'],
-    proveedor: {
-      id: 'prov-5',
-      nombre: 'TexMex Industries',
-      avatar_url: undefined
-    },
-    created_at: '2024-01-11T11:30:00Z'
-  },
-  {
-    id: '6',
-    titulo: 'Consultoría en Manufactura',
-    descripcion: 'Consultoría especializada en optimización de procesos de manufactura y mejora continua.',
-    categoria: 'Consultoría',
-    tipo: 'servicio' as const,
-    precio: undefined,
-    ubicacion: 'Querétaro, Querétaro',
-        imagenes: ['/placeholder.svg'],
-    proveedor: {
-      id: 'prov-6',
-      nombre: 'Manufacturing Experts',
-      avatar_url: undefined
-    },
-    created_at: '2024-01-10T16:45:00Z'
-  }
-];
+interface HomeProps {
+  featuredProducts: CardItemListing[];
+}
 
-export default function Home() {
+export default function Home({ featuredProducts }: HomeProps) {
   return (
     <>
       <Head>
@@ -136,11 +43,23 @@ export default function Home() {
             </div>
 
             {/* Products Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {featuredProducts.map((product) => (
-                <CardItem key={product.id} {...product} />
-              ))}
-            </div>
+            {featuredProducts.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {featuredProducts.map((product) => (
+                  <CardItem key={product.id} {...product} />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12 bg-dark-500/30 rounded-2xl border border-gray-light">
+                <h3 className="text-2xl font-semibold text-text-light mb-3">
+                  No hay productos destacados disponibles
+                </h3>
+                <p className="text-text-soft max-w-2xl mx-auto">
+                  Estamos trabajando para mostrarte las mejores oportunidades de manufactura. Mientras tanto,
+                  explora el catálogo completo para descubrir nuevos proveedores.
+                </p>
+              </div>
+            )}
 
             {/* View More Button */}
             <div className="text-center mt-12">
@@ -236,3 +155,18 @@ export default function Home() {
     </>
   );
 }
+
+export const getStaticProps: GetStaticProps<HomeProps> = async () => {
+  const result = await getFeaturedListingsForCards(6);
+
+  if (!result.success) {
+    console.error('❌ Error cargando destacados para la página principal:', result.error);
+  }
+
+  return {
+    props: {
+      featuredProducts: result.success && result.data ? result.data : [],
+    },
+    revalidate: 300, // Revalidar cada 5 minutos para mantener los destacados frescos
+  };
+};

@@ -10,7 +10,13 @@
  */
 
 import { supabase } from '@/lib/supabaseClient';
-import type { ListingInsert, ListingUpdate, Listing, ListingType } from '@/types/supabase';
+import type {
+  ListingInsert,
+  ListingUpdate,
+  Listing,
+  ListingType,
+  ListingExploreView,
+} from '@/types/supabase';
 
 // =========================================================================
 // INTERFACES
@@ -57,6 +63,46 @@ export interface ApiResponse<T = any> {
   success: boolean;
   data?: T;
   error?: string;
+}
+
+// =========================================================================
+// FORMATO PARA CARD ITEM
+// =========================================================================
+
+export interface CardItemListing {
+  id: string;
+  titulo: string;
+  descripcion: string;
+  categoria: string;
+  tipo: ListingType;
+  precio?: number;
+  ubicacion: string;
+  imagenes: string[];
+  proveedor: {
+    id: string;
+    nombre: string;
+    avatar_url?: string;
+  };
+  created_at: string;
+}
+
+export function formatListingForCardItem(listing: ListingExploreView): CardItemListing {
+  return {
+    id: listing.id,
+    titulo: listing.titulo,
+    descripcion: listing.descripcion || '',
+    categoria: listing.categoria || 'Sin categoría',
+    tipo: listing.tipo,
+    precio: listing.precio ?? undefined,
+    ubicacion: listing.ubicacion || listing.proveedor_ubicacion || '',
+    imagenes: listing.imagenes || [],
+    proveedor: {
+      id: listing.proveedor_id,
+      nombre: listing.proveedor_nombre || 'Proveedor',
+      avatar_url: listing.proveedor_avatar || undefined,
+    },
+    created_at: listing.created_at,
+  };
 }
 
 // =========================================================================
@@ -254,7 +300,7 @@ export async function getListingsWithProvider(
   filters?: ListingFilters,
   limit: number = 50,
   offset: number = 0
-): Promise<ApiResponse> {
+): Promise<ApiResponse<ListingExploreView[]>> {
   try {
     let query = supabase
       .from('v_listings_explore')
@@ -320,13 +366,53 @@ export async function getListingsWithProvider(
 
     return {
       success: true,
-      data: data || [],
+      data: (data as ListingExploreView[]) || [],
     };
   } catch (error: any) {
     console.error('❌ Error inesperado en getListingsWithProvider:', error);
     return {
       success: false,
       error: error.message || 'Error inesperado',
+    };
+  }
+}
+
+/**
+ * Obtener publicaciones destacadas y formatearlas para CardItem
+ * Actualmente utiliza los listados más recientes como destacados
+ *
+ * @param limit Número de elementos destacados a obtener
+ * @returns Lista formateada lista para CardItem
+ */
+export async function getFeaturedListingsForCards(
+  limit: number = 6
+): Promise<ApiResponse<CardItemListing[]>> {
+  try {
+    const { data, error } = await supabase
+      .from('v_listings_explore')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(limit);
+
+    if (error) {
+      console.error('❌ Error obteniendo productos destacados:', error.message);
+      return {
+        success: false,
+        error: error.message,
+      };
+    }
+
+    const formatted = ((data as ListingExploreView[]) || []).map(formatListingForCardItem);
+
+    return {
+      success: true,
+      data: formatted,
+    };
+  } catch (error: any) {
+    console.error('❌ Error inesperado en getFeaturedListingsForCards:', error);
+    return {
+      success: false,
+      error: error.message || 'Error inesperado al obtener destacados',
     };
   }
 }
@@ -780,6 +866,7 @@ export default {
   createListing,
   getListings,
   getListingsWithProvider,
+  getFeaturedListingsForCards,
   getListingById,
   getUserListings,
   updateListing,
@@ -788,6 +875,7 @@ export default {
   countListings,
   uploadListingImage,
   deleteListingImage,
+  formatListingForCardItem,
 };
 
 

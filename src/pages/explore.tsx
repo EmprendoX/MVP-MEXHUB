@@ -1,151 +1,25 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import Navbar from '@/components/Navbar';
 import Filters, { FilterState } from '@/components/Filters';
 import CardItem from '@/components/CardItem';
 import Footer from '@/components/Footer';
-import * as listingsApi from '@/lib/api/listings';
-import type { ListingExploreView } from '@/types/supabase';
+import {
+  getListingsWithProvider,
+  formatListingForCardItem,
+  type ListingFilters,
+  type CardItemListing,
+} from '@/lib/api/listings';
 import {
   serviceCatalog,
   getCategoryById,
   getSubcategoryById,
 } from '@/lib/catalog/serviceCategories';
 
-// Datos de ejemplo expandidos para la página explore
-const allProducts = [
-  {
-    id: '1',
-    titulo: 'Maquinaria Industrial CNC',
-    descripcion: 'Máquinas CNC de alta precisión para la industria manufacturera. Fabricación de piezas metálicas y plásticas con tecnología de vanguardia.',
-    categoria: 'Maquinaria Industrial',
-    tipo: 'producto' as const,
-    precio: 2500000,
-    ubicacion: 'Guadalajara, Jalisco',
-        imagenes: ['/placeholder.svg'],
-    proveedor: {
-      id: 'prov-1',
-      nombre: 'MetalWorks México',
-      avatar_url: undefined
-    },
-    created_at: '2024-01-15T10:30:00Z'
-  },
-  {
-    id: '2',
-    titulo: 'Servicios de Diseño Industrial',
-    descripcion: 'Diseño y desarrollo de productos industriales. Desde conceptualización hasta prototipado y manufactura.',
-    categoria: 'Servicios de Diseño',
-    tipo: 'servicio' as const,
-    precio: undefined,
-    ubicacion: 'Monterrey, Nuevo León',
-        imagenes: ['/placeholder.svg'],
-    proveedor: {
-      id: 'prov-2',
-      nombre: 'DesignTech Solutions',
-      avatar_url: undefined
-    },
-    created_at: '2024-01-14T15:45:00Z'
-  },
-  {
-    id: '3',
-    titulo: 'Componentes Electrónicos',
-    descripcion: 'Fabricación de componentes electrónicos para la industria automotriz y de telecomunicaciones.',
-    categoria: 'Electrónicos',
-    tipo: 'producto' as const,
-    precio: 85000,
-    ubicacion: 'Tijuana, Baja California',
-        imagenes: ['/placeholder.svg'],
-    proveedor: {
-      id: 'prov-3',
-      nombre: 'ElectroMex Components',
-      avatar_url: undefined
-    },
-    created_at: '2024-01-13T09:20:00Z'
-  },
-  {
-    id: '4',
-    titulo: 'Servicios de Logística',
-    descripcion: 'Soluciones logísticas integrales para la exportación e importación de productos manufacturados.',
-    categoria: 'Logística',
-    tipo: 'servicio' as const,
-    precio: undefined,
-    ubicacion: 'Ciudad de México',
-        imagenes: ['/placeholder.svg'],
-    proveedor: {
-      id: 'prov-4',
-      nombre: 'LogiMex International',
-      avatar_url: undefined
-    },
-    created_at: '2024-01-12T14:15:00Z'
-  },
-  {
-    id: '5',
-    titulo: 'Textiles Industriales',
-    descripcion: 'Fabricación de textiles especializados para la industria automotriz, médica y de construcción.',
-    categoria: 'Textiles',
-    tipo: 'producto' as const,
-    precio: 450000,
-    ubicacion: 'Puebla, Puebla',
-        imagenes: ['/placeholder.svg'],
-    proveedor: {
-      id: 'prov-5',
-      nombre: 'TexMex Industries',
-      avatar_url: undefined
-    },
-    created_at: '2024-01-11T11:30:00Z'
-  },
-  {
-    id: '6',
-    titulo: 'Consultoría en Manufactura',
-    descripcion: 'Consultoría especializada en optimización de procesos de manufactura y mejora continua.',
-    categoria: 'Consultoría',
-    tipo: 'servicio' as const,
-    precio: undefined,
-    ubicacion: 'Querétaro, Querétaro',
-        imagenes: ['/placeholder.svg'],
-    proveedor: {
-      id: 'prov-6',
-      nombre: 'Manufacturing Experts',
-      avatar_url: undefined
-    },
-    created_at: '2024-01-10T16:45:00Z'
-  },
-  {
-    id: '7',
-    titulo: 'Piezas Metálicas Personalizadas',
-    descripcion: 'Fabricación de piezas metálicas a medida para la industria automotriz y aeroespacial.',
-    categoria: 'Metalúrgica',
-    tipo: 'producto' as const,
-    precio: 120000,
-    ubicacion: 'San Luis Potosí',
-        imagenes: ['/placeholder.svg'],
-    proveedor: {
-      id: 'prov-7',
-      nombre: 'MetalCraft Solutions',
-      avatar_url: undefined
-    },
-    created_at: '2024-01-09T13:20:00Z'
-  },
-  {
-    id: '8',
-    titulo: 'Servicios de Calidad ISO',
-    descripcion: 'Certificación y consultoría en sistemas de calidad ISO 9001, 14001 y 45001.',
-    categoria: 'Consultoría',
-    tipo: 'servicio' as const,
-    precio: undefined,
-    ubicacion: 'Mérida, Yucatán',
-        imagenes: ['/placeholder.svg'],
-    proveedor: {
-      id: 'prov-8',
-      nombre: 'QualityMex Systems',
-      avatar_url: undefined
-    },
-    created_at: '2024-01-08T10:15:00Z'
-  }
-];
+const PAGE_SIZE = 24;
 
 export default function Explore() {
   const router = useRouter();
@@ -161,9 +35,12 @@ export default function Explore() {
   });
   
   // Estado para listings reales de Supabase
-  const [listings, setListings] = useState<ListingExploreView[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [listings, setListings] = useState<CardItemListing[]>([]);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
 
   // Get search query from URL on mount
   useEffect(() => {
@@ -172,90 +49,138 @@ export default function Explore() {
     }
   }, [router.query.q]);
 
-  // Memoizar dependencias para evitar re-renders innecesarios
-  const filterDependencies = useMemo(() => [
+  const categoryFilters = useMemo(() => {
+    const categoryFiltersSet = new Set<string>();
+
+    filters.categories.forEach((categoryId) => {
+      const category = getCategoryById(categoryId);
+      if (category) {
+        categoryFiltersSet.add(category.name);
+      }
+    });
+
+    filters.subcategories.forEach((subcategoryId) => {
+      const info = getSubcategoryById(subcategoryId);
+      if (info) {
+        categoryFiltersSet.add(info.category.name);
+      }
+    });
+
+    if (filters.serviceTypes.length > 0) {
+      serviceCatalog.forEach((category) => {
+        if (category.serviceTypes.some((type) => filters.serviceTypes.includes(type))) {
+          categoryFiltersSet.add(category.name);
+        }
+      });
+    }
+
+    return Array.from(categoryFiltersSet);
+  }, [filters.categories, filters.subcategories, filters.serviceTypes]);
+
+  const apiFilters = useMemo<ListingFilters>(() => {
+    const computedFilters: ListingFilters = {};
+
+    if (searchQuery.trim()) {
+      computedFilters.searchQuery = searchQuery.trim();
+    }
+
+    if (filters.types.length > 0) {
+      computedFilters.tipo = filters.types;
+    }
+
+    if (filters.locations.length > 0) {
+      computedFilters.ubicacion = filters.locations;
+    }
+
+    if (filters.priceRange[0] > 0) {
+      computedFilters.priceMin = filters.priceRange[0];
+    }
+
+    if (filters.priceRange[1] < 10000000) {
+      computedFilters.priceMax = filters.priceRange[1];
+    }
+
+    if (categoryFilters.length > 0) {
+      computedFilters.categoria = categoryFilters;
+    }
+
+    return computedFilters;
+  }, [
     searchQuery,
-    JSON.stringify(filters.categories),
-    JSON.stringify(filters.subcategories),
-    JSON.stringify(filters.serviceTypes),
-    JSON.stringify(filters.locations),
-    JSON.stringify(filters.types),
-    JSON.stringify(filters.priceRange)
-  ], [
-    searchQuery,
-    filters.categories,
-    filters.subcategories,
-    filters.serviceTypes,
-    filters.locations,
     filters.types,
+    filters.locations,
     filters.priceRange,
+    categoryFilters,
   ]);
 
-  // Cargar listings desde Supabase con filtros aplicados
-  useEffect(() => {
-    async function loadListings() {
-      setLoading(true);
-      setError(null);
+  const fetchListings = useCallback(
+    async (pageToLoad: number, reset: boolean) => {
+      if (reset) {
+        setIsInitialLoading(true);
+        setError(null);
+        setListings([]);
+        setHasMore(true);
+        setCurrentPage(0);
+      } else {
+        setLoadingMore(true);
+      }
 
       try {
-        // Preparar filtros para la API
-        const categoryFiltersSet = new Set<string>();
-
-        filters.categories.forEach((categoryId) => {
-          const category = getCategoryById(categoryId);
-          if (category) {
-            categoryFiltersSet.add(category.name);
-          }
-        });
-
-        filters.subcategories.forEach((subcategoryId) => {
-          const info = getSubcategoryById(subcategoryId);
-          if (info) {
-            categoryFiltersSet.add(info.category.name);
-          }
-        });
-
-        if (filters.serviceTypes.length > 0) {
-          serviceCatalog.forEach((category) => {
-            if (category.serviceTypes.some((type) => filters.serviceTypes.includes(type))) {
-              categoryFiltersSet.add(category.name);
-            }
-          });
-        }
-
-        const categoryFilters = Array.from(categoryFiltersSet);
-
-        const apiFilters: listingsApi.ListingFilters = {
-          searchQuery: searchQuery.trim() || undefined,
-          tipo: filters.types.length > 0 ? filters.types : undefined,
-          ubicacion: filters.locations.length > 0 ? filters.locations : undefined,
-          priceMin: filters.priceRange[0] > 0 ? filters.priceRange[0] : undefined,
-          priceMax: filters.priceRange[1] < 10000000 ? filters.priceRange[1] : undefined,
-        };
-
-        if (categoryFilters.length > 0) {
-          apiFilters.categoria = categoryFilters;
-        }
-
-        // Usar la vista v_listings_explore que ya incluye datos del proveedor
-        const result = await listingsApi.getListingsWithProvider(apiFilters, 100);
+        const offset = pageToLoad * PAGE_SIZE;
+        const result = await getListingsWithProvider(apiFilters, PAGE_SIZE, offset);
 
         if (result.success) {
-          setListings(result.data || []);
+          const data = (result.data || []).map(formatListingForCardItem);
+          setHasMore(data.length === PAGE_SIZE);
+          setListings((prev) => {
+            if (reset) {
+              return data;
+            }
+
+            const existingIds = new Set(prev.map((item) => item.id));
+            const merged = [...prev];
+            data.forEach((item) => {
+              if (!existingIds.has(item.id)) {
+                merged.push(item);
+              }
+            });
+            return merged;
+          });
+          setCurrentPage(pageToLoad);
         } else {
           setError(result.error || 'Error al cargar publicaciones');
-          setListings([]);
+          if (reset) {
+            setListings([]);
+            setHasMore(false);
+          }
         }
       } catch (err: any) {
         setError(err.message || 'Error inesperado');
-        setListings([]);
+        if (reset) {
+          setListings([]);
+          setHasMore(false);
+        }
       } finally {
-        setLoading(false);
+        if (reset) {
+          setIsInitialLoading(false);
+        } else {
+          setLoadingMore(false);
+        }
       }
-    }
+    },
+    [apiFilters]
+  );
 
-    loadListings();
-  }, filterDependencies);
+  useEffect(() => {
+    fetchListings(0, true);
+  }, [fetchListings]);
+
+  const handleLoadMore = () => {
+    if (!hasMore || loadingMore) {
+      return;
+    }
+    fetchListings(currentPage + 1, false);
+  };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -339,7 +264,9 @@ export default function Explore() {
             {/* Results Summary */}
             <div className="mt-4 flex items-center justify-between">
               <p className="text-text-soft">
-                {loading ? 'Cargando...' : `${listings.length} resultado${listings.length !== 1 ? 's' : ''} encontrado${listings.length !== 1 ? 's' : ''}`}
+                {isInitialLoading
+                  ? 'Cargando...'
+                  : `${listings.length} resultado${listings.length !== 1 ? 's' : ''} encontrado${listings.length !== 1 ? 's' : ''}`}
                 {searchQuery && ` para "${searchQuery}"`}
               </p>
               <div className="flex items-center space-x-2 text-sm text-text-soft">
@@ -362,7 +289,7 @@ export default function Explore() {
 
           {/* Products Grid */}
           <div className="flex-1 p-6">
-            {loading ? (
+            {isInitialLoading ? (
               <div className="text-center py-20">
                 <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary mx-auto mb-4"></div>
                 <p className="text-text-soft">Cargando publicaciones...</p>
@@ -379,27 +306,29 @@ export default function Explore() {
                 </button>
               </div>
             ) : listings.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {listings.map((listing) => (
-                  <CardItem
-                    key={listing.id}
-                    id={listing.id}
-                    titulo={listing.titulo}
-                    descripcion={listing.descripcion || ''}
-                    categoria={listing.categoria || ''}
-                    tipo={listing.tipo}
-                    precio={listing.precio || undefined}
-                    ubicacion={listing.ubicacion || ''}
-                    imagenes={listing.imagenes || []}
-                    proveedor={{
-                      id: listing.proveedor_id,
-                      nombre: listing.proveedor_nombre || 'Usuario',
-                      avatar_url: listing.proveedor_avatar || undefined
-                    }}
-                    created_at={listing.created_at}
-                  />
-                ))}
-              </div>
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  {listings.map((listing) => (
+                    <CardItem key={listing.id} {...listing} />
+                  ))}
+                </div>
+                {hasMore && (
+                  <div className="text-center mt-10">
+                    <button
+                      onClick={handleLoadMore}
+                      className="btn-outline px-8 py-3"
+                      disabled={loadingMore}
+                    >
+                      {loadingMore ? 'Cargando más resultados...' : 'Cargar más resultados'}
+                    </button>
+                  </div>
+                )}
+                {!hasMore && listings.length >= PAGE_SIZE && (
+                  <p className="text-center text-text-soft mt-10">
+                    No hay más resultados para mostrar.
+                  </p>
+                )}
+              </>
             ) : (
               <div className="text-center py-20">
                 <svg className="w-24 h-24 text-text-soft mx-auto mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
