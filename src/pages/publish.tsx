@@ -8,6 +8,12 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useListings } from '@/lib/hooks/useListings';
+import {
+  serviceCatalog,
+  getCategoryById,
+  getSubcategoriesByCategoryId,
+  getSubcategoryById,
+} from '@/lib/catalog/serviceCategories';
 
 interface FormData {
   titulo: string;
@@ -23,39 +29,9 @@ interface FormData {
   imagenes: File[];
 }
 
-const categories = [
-  'Maquinaria Industrial',
-  'Electrónicos',
-  'Textiles',
-  'Servicios de Diseño',
-  'Logística',
-  'Consultoría',
-  'Metalúrgica',
-  'Química',
-  'Alimentaria',
-  'Automotriz',
-  'Construcción',
-  'Tecnología'
-];
-
-const subcategories = {
-  'Maquinaria Industrial': ['CNC', 'Inyección', 'Extrusión', 'Torneado', 'Fresado'],
-  'Electrónicos': ['Componentes', 'Circuitos', 'Sensores', 'Microcontroladores'],
-  'Textiles': ['Automotriz', 'Médico', 'Industrial', 'Construcción'],
-  'Servicios de Diseño': ['CAD', 'Prototipado', 'Desarrollo', 'Consultoría'],
-  'Logística': ['Embalaje', 'Transporte', 'Almacén', 'Distribución'],
-  'Consultoría': ['Calidad', 'Procesos', 'Lean', 'ISO'],
-  'Metalúrgica': ['Piezas', 'Estructuras', 'Soldadura', 'Tratamiento'],
-  'Química': ['Productos', 'Análisis', 'Laboratorio', 'Investigación'],
-  'Alimentaria': ['Procesamiento', 'Empaque', 'Ingredientes', 'Equipos'],
-  'Automotriz': ['Piezas', 'Componentes', 'Ensamblaje', 'Servicios'],
-  'Construcción': ['Materiales', 'Herramientas', 'Equipos', 'Servicios'],
-  'Tecnología': ['Software', 'Hardware', 'IoT', 'Automatización']
-};
-
 export default function Publish() {
   const router = useRouter();
-  const { user, userProfile, userProfileId, loading: authLoading } = useAuth();
+  const { user, userProfileId, loading: authLoading } = useAuth();
   const { createListing, uploadImage } = useListings({ userId: userProfileId });
   
   const [formData, setFormData] = useState<FormData>({
@@ -77,6 +53,13 @@ export default function Publish() {
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [uploadingImages, setUploadingImages] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+
+  const selectedCategory = formData.categoria
+    ? getCategoryById(formData.categoria)
+    : undefined;
+  const availableSubcategories = formData.categoria
+    ? getSubcategoriesByCategoryId(formData.categoria)
+    : [];
 
   // Proteger ruta: redirigir a login si no está autenticado
   useEffect(() => {
@@ -160,8 +143,11 @@ export default function Publish() {
         titulo: formData.titulo,
         descripcion: formData.descripcion || undefined,
         tipo: formData.tipo,
-        categoria: formData.categoria || undefined,
-        subcategoria: formData.subcategoria || undefined,
+        categoria: selectedCategory?.name || undefined,
+        subcategoria:
+          formData.subcategoria
+            ? getSubcategoryById(formData.subcategoria)?.subcategory.name
+            : undefined,
         precio: formData.precio ? parseFloat(formData.precio) : undefined,
         ubicacion: formData.ubicacion || undefined,
         tiempo_entrega: formData.tiempoEntrega || undefined,
@@ -336,10 +322,17 @@ export default function Publish() {
                     required
                   >
                     <option value="">Seleccionar categoría</option>
-                    {categories.map(cat => (
-                      <option key={cat} value={cat}>{cat}</option>
+                    {serviceCatalog.map(category => (
+                      <option key={category.id} value={category.id}>
+                        {category.name}
+                      </option>
                     ))}
                   </select>
+                  {selectedCategory && (
+                    <p className="mt-2 text-sm text-text-soft">
+                      {selectedCategory.description}
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -356,10 +349,20 @@ export default function Publish() {
                     className="select-field"
                   >
                     <option value="">Seleccionar subcategoría</option>
-                    {subcategories[formData.categoria as keyof typeof subcategories]?.map(subcat => (
-                      <option key={subcat} value={subcat}>{subcat}</option>
+                    {availableSubcategories.map(subcategory => (
+                      <option key={subcategory.id} value={subcategory.id}>
+                        {subcategory.name}
+                      </option>
                     ))}
                   </select>
+                  {formData.subcategoria && (
+                    <p className="mt-2 text-sm text-text-soft">
+                      {
+                        getSubcategoryById(formData.subcategoria)?.subcategory
+                          .description
+                      }
+                    </p>
+                  )}
                 </div>
               )}
 
