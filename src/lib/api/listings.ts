@@ -9,7 +9,7 @@
  *           tipo, precio, ubicacion, tiempo_entrega, capacidad, moq, imagenes
  */
 
-import { supabase, isSupabaseConfigured } from '@/lib/supabaseClient';
+import { supabase, isSupabaseConfigured, logSupabaseMissingConfig } from '@/lib/supabaseClient';
 import type {
   ListingInsert,
   ListingUpdate,
@@ -68,15 +68,26 @@ export interface ApiResponse<T = any> {
 const SUPABASE_CONFIG_ERROR =
   'Supabase no está configurado. Verifica NEXT_PUBLIC_SUPABASE_URL y NEXT_PUBLIC_SUPABASE_ANON_KEY.';
 
-function ensureSupabaseConfigured<T>(): ApiResponse<T> | null {
-  if (!isSupabaseConfigured) {
-    return {
-      success: false,
-      error: SUPABASE_CONFIG_ERROR,
-    };
+interface EnsureSupabaseOptions<T> {
+  fallback?: () => ApiResponse<T>;
+  context?: string;
+}
+
+function ensureSupabaseConfigured<T>(options?: EnsureSupabaseOptions<T>): ApiResponse<T> | null {
+  if (isSupabaseConfigured) {
+    return null;
   }
 
-  return null;
+  logSupabaseMissingConfig(options?.context);
+
+  if (options?.fallback) {
+    return options.fallback();
+  }
+
+  return {
+    success: false,
+    error: SUPABASE_CONFIG_ERROR,
+  };
 }
 
 // =========================================================================
@@ -224,7 +235,13 @@ export async function getListings(
   limit: number = 50,
   offset: number = 0
 ): Promise<ApiResponse<Listing[]>> {
-  const configError = ensureSupabaseConfigured<Listing[]>();
+  const configError = ensureSupabaseConfigured<Listing[]>({
+    context: 'getListings',
+    fallback: () => ({
+      success: true,
+      data: [],
+    }),
+  });
   if (configError) {
     return configError;
   }
@@ -325,7 +342,13 @@ export async function getListingsWithProvider(
   limit: number = 50,
   offset: number = 0
 ): Promise<ApiResponse<ListingExploreView[]>> {
-  const configError = ensureSupabaseConfigured<ListingExploreView[]>();
+  const configError = ensureSupabaseConfigured<ListingExploreView[]>({
+    context: 'getListingsWithProvider',
+    fallback: () => ({
+      success: true,
+      data: [],
+    }),
+  });
   if (configError) {
     return configError;
   }
@@ -416,12 +439,15 @@ export async function getListingsWithProvider(
 export async function getFeaturedListingsForCards(
   limit: number = 6
 ): Promise<ApiResponse<CardItemListing[]>> {
-  if (!isSupabaseConfigured) {
-    console.warn('⚠️ Supabase no está configurado. Retornando destacados vacíos.');
-    return {
+  const configError = ensureSupabaseConfigured<CardItemListing[]>({
+    context: 'getFeaturedListingsForCards',
+    fallback: () => ({
       success: true,
       data: [],
-    };
+    }),
+  });
+  if (configError) {
+    return configError;
   }
 
   try {
@@ -675,7 +701,13 @@ export async function searchListings(
   searchQuery: string,
   limit: number = 50
 ): Promise<ApiResponse<Listing[]>> {
-  const configError = ensureSupabaseConfigured<Listing[]>();
+  const configError = ensureSupabaseConfigured<Listing[]>({
+    context: 'searchListings',
+    fallback: () => ({
+      success: true,
+      data: [],
+    }),
+  });
   if (configError) {
     return configError;
   }
@@ -728,7 +760,13 @@ export async function searchListings(
 export async function countListings(
   filters?: ListingFilters
 ): Promise<ApiResponse<number>> {
-  const configError = ensureSupabaseConfigured<number>();
+  const configError = ensureSupabaseConfigured<number>({
+    context: 'countListings',
+    fallback: () => ({
+      success: true,
+      data: 0,
+    }),
+  });
   if (configError) {
     return configError;
   }
