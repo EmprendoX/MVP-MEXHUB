@@ -17,21 +17,34 @@ import type { Database } from '@/types/supabase';
 // VALIDACIÓN DE VARIABLES DE ENTORNO
 // =========================================================================
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const envSupabaseUrl =
+  process.env.NEXT_PUBLIC_SUPABASE_URL ||
+  process.env.SUPABASE_URL ||
+  process.env.PUBLIC_SUPABASE_URL ||
+  '';
 
-if (!supabaseUrl) {
-  throw new Error(
-    '❌ NEXT_PUBLIC_SUPABASE_URL no está definida en .env.local\n' +
-    'Por favor, agrega: NEXT_PUBLIC_SUPABASE_URL=https://tu-proyecto.supabase.co'
-  );
-}
+const envSupabaseAnonKey =
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+  process.env.SUPABASE_ANON_KEY ||
+  process.env.PUBLIC_SUPABASE_ANON_KEY ||
+  '';
 
-if (!supabaseAnonKey) {
-  throw new Error(
-    '❌ NEXT_PUBLIC_SUPABASE_ANON_KEY no está definida en .env.local\n' +
-    'Por favor, agrega tu Anon Key desde Supabase Dashboard → Settings → API'
+const supabaseUrl = envSupabaseUrl.trim() || undefined;
+const supabaseAnonKey = envSupabaseAnonKey.trim() || undefined;
+
+export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
+
+const PLACEHOLDER_SUPABASE_URL = 'https://placeholder.supabase.co';
+const PLACEHOLDER_SUPABASE_ANON_KEY =
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.cGxhY2Vob2xkZXI.uc2lnbmF0dXJl';
+
+let hasLoggedMissingConfig = false;
+
+if (!isSupabaseConfigured && process.env.NODE_ENV !== 'production') {
+  console.warn(
+    '⚠️ Supabase no está configurado. Define NEXT_PUBLIC_SUPABASE_URL y NEXT_PUBLIC_SUPABASE_ANON_KEY para habilitar la base de datos.'
   );
+  hasLoggedMissingConfig = true;
 }
 
 // =========================================================================
@@ -42,14 +55,35 @@ if (!supabaseAnonKey) {
  * Cliente de Supabase tipado para HUBMEX
  * Usa los tipos generados desde database.txt
  */
-export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    persistSession: true,           // Mantener sesión en localStorage
-    autoRefreshToken: true,          // Refrescar token automáticamente
-    detectSessionInUrl: true,        // Detectar sesión en URL (para magic links)
-    storageKey: 'hubmex-auth-token', // Key personalizada para localStorage
-  },
-});
+export const supabase = createClient<Database>(
+  supabaseUrl || PLACEHOLDER_SUPABASE_URL,
+  supabaseAnonKey || PLACEHOLDER_SUPABASE_ANON_KEY,
+  {
+    auth: {
+      persistSession: true, // Mantener sesión en localStorage
+      autoRefreshToken: true, // Refrescar token automáticamente
+      detectSessionInUrl: true, // Detectar sesión en URL (para magic links)
+      storageKey: 'hubmex-auth-token', // Key personalizada para localStorage
+    },
+  }
+);
+
+export function logSupabaseMissingConfig(context?: string) {
+  if (isSupabaseConfigured) {
+    return;
+  }
+
+  if (!hasLoggedMissingConfig) {
+    console.warn(
+      '⚠️ Supabase no está configurado. Define NEXT_PUBLIC_SUPABASE_URL y NEXT_PUBLIC_SUPABASE_ANON_KEY para habilitar la base de datos.'
+    );
+    hasLoggedMissingConfig = true;
+  }
+
+  if (context) {
+    console.warn(`⚠️ Operación omitida por falta de configuración Supabase (${context}).`);
+  }
+}
 
 // =========================================================================
 // HELPER FUNCTIONS

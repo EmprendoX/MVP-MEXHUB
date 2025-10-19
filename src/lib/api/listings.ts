@@ -9,8 +9,14 @@
  *           tipo, precio, ubicacion, tiempo_entrega, capacidad, moq, imagenes
  */
 
-import { supabase } from '@/lib/supabaseClient';
-import type { ListingInsert, ListingUpdate, Listing, ListingType } from '@/types/supabase';
+import { supabase, isSupabaseConfigured, logSupabaseMissingConfig } from '@/lib/supabaseClient';
+import type {
+  ListingInsert,
+  ListingUpdate,
+  Listing,
+  ListingType,
+  ListingExploreView,
+} from '@/types/supabase';
 
 // =========================================================================
 // INTERFACES
@@ -59,6 +65,81 @@ export interface ApiResponse<T = any> {
   error?: string;
 }
 
+const SUPABASE_CONFIG_ERROR =
+  'Supabase no está configurado. Verifica NEXT_PUBLIC_SUPABASE_URL y NEXT_PUBLIC_SUPABASE_ANON_KEY.';
+
+interface EnsureSupabaseOptions<T> {
+  fallback?: () => ApiResponse<T>;
+  context?: string;
+}
+
+function ensureSupabaseConfigured<T>(options?: EnsureSupabaseOptions<T>): ApiResponse<T> | null {
+  if (isSupabaseConfigured) {
+    return null;
+  }
+
+  logSupabaseMissingConfig(options?.context);
+
+  if (options?.fallback) {
+    return options.fallback();
+  }
+
+  return {
+    success: false,
+    error: SUPABASE_CONFIG_ERROR,
+  };
+}
+
+// =========================================================================
+// FORMATO PARA CARD ITEM
+// =========================================================================
+
+export interface CardItemListing {
+  id: string;
+  titulo: string;
+  descripcion: string;
+  categoria: string;
+  tipo: ListingType;
+  precio?: number;
+  ubicacion: string;
+  imagenes: string[];
+  proveedor: {
+    id: string;
+    nombre: string;
+    avatar_url?: string;
+  };
+  created_at: string;
+}
+
+export function formatListingForCardItem(listing: ListingExploreView): CardItemListing {
+  const proveedor: CardItemListing['proveedor'] = {
+    id: listing.proveedor_id,
+    nombre: listing.proveedor_nombre || 'Proveedor',
+  };
+
+  if (listing.proveedor_avatar) {
+    proveedor.avatar_url = listing.proveedor_avatar;
+  }
+
+  const cardItem: CardItemListing = {
+    id: listing.id,
+    titulo: listing.titulo,
+    descripcion: listing.descripcion || '',
+    categoria: listing.categoria || 'Sin categoría',
+    tipo: listing.tipo,
+    ubicacion: listing.ubicacion || listing.proveedor_ubicacion || '',
+    imagenes: listing.imagenes || [],
+    proveedor,
+    created_at: listing.created_at,
+  };
+
+  if (listing.precio !== null && listing.precio !== undefined) {
+    cardItem.precio = listing.precio;
+  }
+
+  return cardItem;
+}
+
 // =========================================================================
 // FUNCIONES CRUD
 // =========================================================================
@@ -76,6 +157,11 @@ export async function createListing(
   userId: string,
   data: CreateListingData
 ): Promise<ApiResponse<Listing>> {
+  const configError = ensureSupabaseConfigured<Listing>();
+  if (configError) {
+    return configError;
+  }
+
   try {
     // Validar que el título no esté vacío (NOT NULL en BD)
     if (!data.titulo || !data.titulo.trim()) {
@@ -159,6 +245,17 @@ export async function getListings(
   limit: number = 50,
   offset: number = 0
 ): Promise<ApiResponse<Listing[]>> {
+  const configError = ensureSupabaseConfigured<Listing[]>({
+    context: 'getListings',
+    fallback: () => ({
+      success: true,
+      data: [],
+    }),
+  });
+  if (configError) {
+    return configError;
+  }
+
   try {
     let query = supabase
       .from('listings')
@@ -254,7 +351,18 @@ export async function getListingsWithProvider(
   filters?: ListingFilters,
   limit: number = 50,
   offset: number = 0
-): Promise<ApiResponse> {
+): Promise<ApiResponse<ListingExploreView[]>> {
+  const configError = ensureSupabaseConfigured<ListingExploreView[]>({
+    context: 'getListingsWithProvider',
+    fallback: () => ({
+      success: true,
+      data: [],
+    }),
+  });
+  if (configError) {
+    return configError;
+  }
+
   try {
     let query = supabase
       .from('v_listings_explore')
@@ -320,7 +428,7 @@ export async function getListingsWithProvider(
 
     return {
       success: true,
-      data: data || [],
+      data: (data as ListingExploreView[]) || [],
     };
   } catch (error: any) {
     console.error('❌ Error inesperado en getListingsWithProvider:', error);
@@ -332,12 +440,68 @@ export async function getListingsWithProvider(
 }
 
 /**
+ * Obtener publicaciones destacadas y formatearlas para CardItem
+ * Actualmente utiliza los listados más recientes como destacados
+ *
+ * @param limit Número de elementos destacados a obtener
+ * @returns Lista formateada lista para CardItem
+ */
+export async function getFeaturedListingsForCards(
+  limit: number = 6
+): Promise<ApiResponse<CardItemListing[]>> {
+  const configError = ensureSupabaseConfigured<CardItemListing[]>({
+    context: 'getFeaturedListingsForCards',
+    fallback: () => ({
+      success: true,
+      data: [],
+    }),
+  });
+  if (configError) {
+    return configError;
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('v_listings_explore')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(limit);
+
+    if (error) {
+      console.error('❌ Error obteniendo productos destacados:', error.message);
+      return {
+        success: false,
+        error: error.message,
+      };
+    }
+
+    const formatted = ((data as ListingExploreView[]) || []).map(formatListingForCardItem);
+
+    return {
+      success: true,
+      data: formatted,
+    };
+  } catch (error: any) {
+    console.error('❌ Error inesperado en getFeaturedListingsForCards:', error);
+    return {
+      success: false,
+      error: error.message || 'Error inesperado al obtener destacados',
+    };
+  }
+}
+
+/**
  * Obtener una publicación por ID
  * 
  * @param id ID de la publicación
  * @returns Publicación encontrada o null
  */
 export async function getListingById(id: string): Promise<ApiResponse<Listing>> {
+  const configError = ensureSupabaseConfigured<Listing>();
+  if (configError) {
+    return configError;
+  }
+
   try {
     const { data, error } = await supabase
       .from('listings')
@@ -373,6 +537,11 @@ export async function getListingById(id: string): Promise<ApiResponse<Listing>> 
  * @returns Lista de publicaciones del usuario
  */
 export async function getUserListings(userId: string): Promise<ApiResponse<Listing[]>> {
+  const configError = ensureSupabaseConfigured<Listing[]>();
+  if (configError) {
+    return configError;
+  }
+
   try {
     const { data, error } = await supabase
       .from('listings')
@@ -416,6 +585,11 @@ export async function updateListing(
   userId: string,
   data: UpdateListingData
 ): Promise<ApiResponse<Listing>> {
+  const configError = ensureSupabaseConfigured<Listing>();
+  if (configError) {
+    return configError;
+  }
+
   try {
     // Validar máximo 5 imágenes si se están actualizando
     if (data.imagenes && data.imagenes.length > 5) {
@@ -491,6 +665,11 @@ export async function deleteListing(
   id: string,
   userId: string
 ): Promise<ApiResponse> {
+  const configError = ensureSupabaseConfigured();
+  if (configError) {
+    return configError;
+  }
+
   try {
     const { error } = await supabase
       .from('listings')
@@ -532,6 +711,17 @@ export async function searchListings(
   searchQuery: string,
   limit: number = 50
 ): Promise<ApiResponse<Listing[]>> {
+  const configError = ensureSupabaseConfigured<Listing[]>({
+    context: 'searchListings',
+    fallback: () => ({
+      success: true,
+      data: [],
+    }),
+  });
+  if (configError) {
+    return configError;
+  }
+
   try {
     if (!searchQuery || !searchQuery.trim()) {
       return {
@@ -580,6 +770,17 @@ export async function searchListings(
 export async function countListings(
   filters?: ListingFilters
 ): Promise<ApiResponse<number>> {
+  const configError = ensureSupabaseConfigured<number>({
+    context: 'countListings',
+    fallback: () => ({
+      success: true,
+      data: 0,
+    }),
+  });
+  if (configError) {
+    return configError;
+  }
+
   try {
     let query = supabase
       .from('listings')
@@ -667,6 +868,11 @@ export async function uploadListingImage(
   file: File,
   userId: string
 ): Promise<ApiResponse<string>> {
+  const configError = ensureSupabaseConfigured<string>();
+  if (configError) {
+    return configError;
+  }
+
   try {
     // Validar tipo de archivo
     if (!file.type.startsWith('image/')) {
@@ -734,6 +940,11 @@ export async function uploadListingImage(
  * @returns Resultado de la operación
  */
 export async function deleteListingImage(imageUrl: string): Promise<ApiResponse> {
+  const configError = ensureSupabaseConfigured();
+  if (configError) {
+    return configError;
+  }
+
   try {
     // Extraer el path del archivo desde la URL
     const urlParts = imageUrl.split('/listings/');
@@ -780,6 +991,7 @@ export default {
   createListing,
   getListings,
   getListingsWithProvider,
+  getFeaturedListingsForCards,
   getListingById,
   getUserListings,
   updateListing,
@@ -788,6 +1000,7 @@ export default {
   countListings,
   uploadListingImage,
   deleteListingImage,
+  formatListingForCardItem,
 };
 
 
