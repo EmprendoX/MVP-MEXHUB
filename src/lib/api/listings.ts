@@ -112,22 +112,32 @@ export interface CardItemListing {
 }
 
 export function formatListingForCardItem(listing: ListingExploreView): CardItemListing {
-  return {
+  const proveedor: CardItemListing['proveedor'] = {
+    id: listing.proveedor_id,
+    nombre: listing.proveedor_nombre || 'Proveedor',
+  };
+
+  if (listing.proveedor_avatar) {
+    proveedor.avatar_url = listing.proveedor_avatar;
+  }
+
+  const cardItem: CardItemListing = {
     id: listing.id,
     titulo: listing.titulo,
     descripcion: listing.descripcion || '',
     categoria: listing.categoria || 'Sin categoría',
     tipo: listing.tipo,
-    precio: listing.precio ?? undefined,
     ubicacion: listing.ubicacion || listing.proveedor_ubicacion || '',
     imagenes: listing.imagenes || [],
-    proveedor: {
-      id: listing.proveedor_id,
-      nombre: listing.proveedor_nombre || 'Proveedor',
-      avatar_url: listing.proveedor_avatar || undefined,
-    },
+    proveedor,
     created_at: listing.created_at,
   };
+
+  if (listing.precio !== null && listing.precio !== undefined) {
+    cardItem.precio = listing.precio;
+  }
+
+  return cardItem;
 }
 
 // =========================================================================
