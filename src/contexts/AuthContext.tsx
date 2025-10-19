@@ -12,7 +12,7 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabaseClient';
+import { supabase, isSupabaseConfigured, missingSupabaseConfigMessage } from '@/lib/supabaseClient';
 import * as authApi from '@/lib/api/auth';
 import type { User } from '@supabase/supabase-js';
 import type { User as UserProfile } from '@/types/supabase';
@@ -61,6 +61,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
    * Iniciar sesión
    */
   const signIn = async (email: string, password: string): Promise<authApi.AuthResponse> => {
+    if (!isSupabaseConfigured) {
+      return {
+        success: false,
+        error: missingSupabaseConfigMessage,
+      };
+    }
+
     const result = await authApi.signIn({ email, password });
     
     if (result.success) {
@@ -75,6 +82,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
    * Registrar nuevo usuario
    */
   const signUp = async (data: SignUpData): Promise<authApi.AuthResponse> => {
+    if (!isSupabaseConfigured) {
+      return {
+        success: false,
+        error: missingSupabaseConfigMessage,
+      };
+    }
+
     const result = await authApi.signUp(data);
     
     if (result.success) {
@@ -89,6 +103,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
    * Cerrar sesión
    */
   const signOut = async (): Promise<authApi.AuthResponse> => {
+    if (!isSupabaseConfigured) {
+      return {
+        success: false,
+        error: missingSupabaseConfigMessage,
+      };
+    }
+
     const result = await authApi.signOut();
     
     if (result.success) {
@@ -103,6 +124,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
    * Refrescar perfil de usuario desde la base de datos
    */
   const refreshUserProfile = async (): Promise<void> => {
+    if (!isSupabaseConfigured) {
+      setUserProfile(null);
+      return;
+    }
+
     if (!user) {
       setUserProfile(null);
       return;
@@ -123,6 +149,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     let mounted = true;
+
+    if (!isSupabaseConfigured) {
+      console.warn(`[AuthProvider] ${missingSupabaseConfigMessage}`);
+      setLoading(false);
+      return () => {
+        mounted = false;
+      };
+    }
 
     // Obtener sesión inicial
     const getInitialSession = async () => {

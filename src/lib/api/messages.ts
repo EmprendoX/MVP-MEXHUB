@@ -5,7 +5,7 @@
  * Basado en: taskmaster/database.txt (tabla messages)
  */
 
-import { supabase } from '@/lib/supabaseClient';
+import { supabase, isSupabaseConfigured, missingSupabaseConfigMessage } from '@/lib/supabaseClient';
 import type { Message, MessageInsert, User } from '@/types/supabase';
 
 // =========================================================================
@@ -47,6 +47,13 @@ export interface ConversationSummary {
 export async function createMessage(
   messageData: Omit<MessageInsert, 'id' | 'created_at' | 'sender_id'>
 ): Promise<APIResult<Message>> {
+  if (!isSupabaseConfigured) {
+    return {
+      success: false,
+      error: missingSupabaseConfigMessage,
+    };
+  }
+
   try {
     // Obtener usuario autenticado
     const { data: { user } } = await supabase.auth.getUser();
@@ -102,6 +109,13 @@ export async function getConversationMessages(
   otherUserId: string,
   limit: number = 50
 ): Promise<APIResult<Message[]>> {
+  if (!isSupabaseConfigured) {
+    return {
+      success: false,
+      error: missingSupabaseConfigMessage,
+    };
+  }
+
   try {
     const { data: { user } } = await supabase.auth.getUser();
     
@@ -145,6 +159,13 @@ export async function getConversationMessages(
  * @returns Lista de conversaciones con resumen
  */
 export async function getConversationsList(): Promise<APIResult<ConversationSummary[]>> {
+  if (!isSupabaseConfigured) {
+    return {
+      success: false,
+      error: missingSupabaseConfigMessage,
+    };
+  }
+
   try {
     const { data: { user } } = await supabase.auth.getUser();
     
@@ -255,12 +276,17 @@ export function subscribeToMessages(
   otherUserId: string,
   callback: (message: Message) => void
 ): () => void {
+  if (!isSupabaseConfigured) {
+    console.warn(`[messages] ${missingSupabaseConfigMessage}`);
+    return () => {};
+  }
+
   let subscription: any = null;
   
   // Obtener usuario de forma síncrona desde la sesión actual
   supabase.auth.getSession().then(({ data: { session } }) => {
     const user = session?.user;
-    
+
     if (!user) {
       console.error('Usuario no autenticado para suscripción de mensajes');
       return;
@@ -297,6 +323,11 @@ export function subscribeToMessages(
  * @returns Función para cancelar la suscripción
  */
 export function subscribeToNewConversations(callback: () => void): () => void {
+  if (!isSupabaseConfigured) {
+    console.warn(`[messages] ${missingSupabaseConfigMessage}`);
+    return () => {};
+  }
+
   let subscription: any = null;
   
   // Obtener usuario de forma síncrona desde la sesión actual
@@ -343,6 +374,13 @@ export function subscribeToNewConversations(callback: () => void): () => void {
  * @returns Información del usuario
  */
 export async function getUserInfo(userId: string): Promise<APIResult<{ id: string; nombre: string | null; avatar_url: string | null }>> {
+  if (!isSupabaseConfigured) {
+    return {
+      success: false,
+      error: missingSupabaseConfigMessage,
+    };
+  }
+
   try {
     const { data, error } = await supabase
       .from('users')

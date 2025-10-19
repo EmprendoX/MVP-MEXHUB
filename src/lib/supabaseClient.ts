@@ -11,27 +11,136 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/supabase';
 
 // =========================================================================
 // VALIDACIÓN DE VARIABLES DE ENTORNO
 // =========================================================================
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const normalizeEnvValue = (rawValue?: string | null): string | undefined => {
+  if (typeof rawValue !== 'string') {
+    return undefined;
+  }
 
-if (!supabaseUrl) {
-  throw new Error(
-    '❌ NEXT_PUBLIC_SUPABASE_URL no está definida en .env.local\n' +
-    'Por favor, agrega: NEXT_PUBLIC_SUPABASE_URL=https://tu-proyecto.supabase.co'
-  );
-}
+  const trimmed = rawValue.trim();
 
-if (!supabaseAnonKey) {
-  throw new Error(
-    '❌ NEXT_PUBLIC_SUPABASE_ANON_KEY no está definida en .env.local\n' +
-    'Por favor, agrega tu Anon Key desde Supabase Dashboard → Settings → API'
+  if (!trimmed || trimmed.toLowerCase() === 'undefined' || trimmed.toLowerCase() === 'null') {
+    return undefined;
+  }
+
+  return trimmed;
+};
+
+const supabaseUrl = normalizeEnvValue(process.env.NEXT_PUBLIC_SUPABASE_URL ?? undefined);
+const supabaseAnonKey = normalizeEnvValue(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? undefined);
+
+export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
+
+export const missingSupabaseConfigMessage = [
+  'Supabase no está configurado. Agrega NEXT_PUBLIC_SUPABASE_URL y',
+  'NEXT_PUBLIC_SUPABASE_ANON_KEY a tu archivo .env.local para habilitar la base de datos.',
+].join(' ');
+
+const createDisabledClient = (): SupabaseClient<Database> => {
+  const error = new Error(missingSupabaseConfigMessage);
+
+  const createAsyncRejector = (): any =>
+    new Proxy(
+      () => Promise.reject(error),
+      {
+        apply: () => Promise.reject(error),
+        get: (_target, prop) => {
+          if (prop === 'then') {
+            // Evitar que React trate el proxy como una Promise y lo resuelva automáticamente
+            return undefined;
+          }
+          if (prop === 'unsubscribe') {
+            return () => {};
+          }
+          return createAsyncRejector();
+        },
+      },
+    );
+
+  const authProxy = new Proxy(
+    {},
+    {
+      get: (_target, prop) => {
+        if (prop === 'onAuthStateChange') {
+          return () => ({
+            data: { subscription: { unsubscribe: () => {} } },
+            error,
+          });
+        }
+
+        return () => Promise.reject(error);
+      },
+    },
   );
+
+  const storageProxy = new Proxy(
+    {},
+    {
+      get: (_target, prop) => {
+        if (prop === 'from') {
+          return () => createAsyncRejector();
+        }
+
+        return createAsyncRejector();
+      },
+    },
+  );
+
+  return new Proxy(
+    {},
+    {
+      get: (_target, prop) => {
+        if (prop === 'auth') {
+          return authProxy;
+        }
+
+        if (prop === 'storage') {
+          return storageProxy;
+        }
+
+        if (prop === 'from' || prop === 'rpc') {
+          return () => createAsyncRejector();
+        }
+
+        if (prop === 'channel') {
+          return () => ({
+            on: () => createAsyncRejector(),
+            subscribe: () => Promise.reject(error),
+            unsubscribe: () => {},
+          });
+        }
+
+        return createAsyncRejector();
+      },
+    },
+  ) as unknown as SupabaseClient<Database>;
+};
+
+const looksLikeUndefined = (value?: string | null): boolean => {
+  if (typeof value !== 'string') {
+    return false;
+  }
+
+  return value.trim().toLowerCase() === 'undefined';
+};
+
+if (!isSupabaseConfigured) {
+  const scope = typeof window === 'undefined' ? '[server]' : '[client]';
+  const rawUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const rawAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  console.warn(`${scope} ${missingSupabaseConfigMessage}`, {
+    hasSupabaseUrl: typeof rawUrl === 'string' && rawUrl.trim().length > 0,
+    hasSupabaseAnonKey: typeof rawAnonKey === 'string' && rawAnonKey.trim().length > 0,
+    supabaseUrlLooksUndefined: looksLikeUndefined(rawUrl),
+    supabaseAnonKeyLooksUndefined: looksLikeUndefined(rawAnonKey),
+  });
 }
 
 // =========================================================================
@@ -42,14 +151,16 @@ if (!supabaseAnonKey) {
  * Cliente de Supabase tipado para HUBMEX
  * Usa los tipos generados desde database.txt
  */
-export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    persistSession: true,           // Mantener sesión en localStorage
-    autoRefreshToken: true,          // Refrescar token automáticamente
-    detectSessionInUrl: true,        // Detectar sesión en URL (para magic links)
-    storageKey: 'hubmex-auth-token', // Key personalizada para localStorage
-  },
-});
+export const supabase = isSupabaseConfigured
+  ? createClient<Database>(supabaseUrl!, supabaseAnonKey!, {
+      auth: {
+        persistSession: true,           // Mantener sesión en localStorage
+        autoRefreshToken: true,          // Refrescar token automáticamente
+        detectSessionInUrl: true,        // Detectar sesión en URL (para magic links)
+        storageKey: 'hubmex-auth-token', // Key personalizada para localStorage
+      },
+    })
+  : createDisabledClient();
 
 // =========================================================================
 // HELPER FUNCTIONS
