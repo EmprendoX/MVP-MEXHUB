@@ -23,7 +23,9 @@ export function useMessages(options?: UseMessagesOptions) {
   // Estados principales
   const [conversations, setConversations] = useState<ConversationSummary[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [conversationsLoading, setConversationsLoading] = useState(false);
+  const [messagesLoading, setMessagesLoading] = useState(false);
+  const [sendingMessage, setSendingMessage] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
   // Estado de la conversación actual
@@ -40,13 +42,18 @@ export function useMessages(options?: UseMessagesOptions) {
   /**
    * Cargar lista de conversaciones
    */
-  const fetchConversations = useCallback(async () => {
-    setLoading(true);
+  const fetchConversations = useCallback(async (options?: { silent?: boolean }) => {
+    const silent = options?.silent ?? false;
+
+    if (!silent) {
+      setConversationsLoading(true);
+    }
+
     setError(null);
-    
+
     try {
       const result = await messagesApi.getConversationsList();
-      
+
       if (result.success && result.data) {
         setConversations(result.data);
       } else {
@@ -57,7 +64,9 @@ export function useMessages(options?: UseMessagesOptions) {
       setError(err.message || 'Error inesperado al cargar conversaciones.');
       setConversations([]);
     } finally {
-      setLoading(false);
+      if (!silent) {
+        setConversationsLoading(false);
+      }
     }
   }, []);
 
@@ -65,12 +74,12 @@ export function useMessages(options?: UseMessagesOptions) {
    * Cargar mensajes de una conversación específica
    */
   const fetchMessages = useCallback(async (otherUserId: string) => {
-    setLoading(true);
+    setMessagesLoading(true);
     setError(null);
-    
+
     try {
       const result = await messagesApi.getConversationMessages(otherUserId);
-      
+
       if (result.success && result.data) {
         setMessages(result.data);
         setCurrentConversationId(otherUserId);
@@ -82,7 +91,7 @@ export function useMessages(options?: UseMessagesOptions) {
       setError(err.message || 'Error inesperado al cargar mensajes.');
       setMessages([]);
     } finally {
-      setLoading(false);
+      setMessagesLoading(false);
     }
   }, []);
 
@@ -99,8 +108,9 @@ export function useMessages(options?: UseMessagesOptions) {
       return { success: false, error: 'El mensaje no puede estar vacío.' };
     }
 
-    setLoading(true);
-    
+    setSendingMessage(true);
+    setError(null);
+
     try {
       const result = await messagesApi.createMessage({
         receiver_id: receiverId,
@@ -110,10 +120,10 @@ export function useMessages(options?: UseMessagesOptions) {
       if (result.success && result.data) {
         // Agregar el mensaje a la lista local inmediatamente
         setMessages(prev => [...prev, result.data!]);
-        
+
         // Refrescar la lista de conversaciones para actualizar el último mensaje
-        await fetchConversations();
-        
+        await fetchConversations({ silent: true });
+
         return { success: true, data: result.data };
       } else {
         setError(result.error || 'Error al enviar mensaje.');
@@ -123,7 +133,7 @@ export function useMessages(options?: UseMessagesOptions) {
       setError(err.message || 'Error inesperado al enviar mensaje.');
       return { success: false, error: err.message };
     } finally {
-      setLoading(false);
+      setSendingMessage(false);
     }
   }, [fetchConversations]);
 
@@ -163,7 +173,7 @@ export function useMessages(options?: UseMessagesOptions) {
     // Crear nueva suscripción
     const unsubscribe = messagesApi.subscribeToMessages(otherUserId, (newMessage: Message) => {
       console.log('Nuevo mensaje recibido:', newMessage);
-      
+
       // Agregar el mensaje a la lista local
       setMessages(prev => {
         // Evitar duplicados
@@ -174,11 +184,11 @@ export function useMessages(options?: UseMessagesOptions) {
       });
 
       // Refrescar conversaciones para actualizar el último mensaje
-      fetchConversations();
+      fetchConversations({ silent: true });
     });
 
     messageSubscriptionRef.current = unsubscribe;
-  }, []);
+  }, [fetchConversations]);
 
   /**
    * Suscribirse a nuevas conversaciones
@@ -193,11 +203,11 @@ export function useMessages(options?: UseMessagesOptions) {
     // Crear nueva suscripción
     const unsubscribe = messagesApi.subscribeToNewConversations(() => {
       console.log('Nueva conversación detectada');
-      fetchConversations();
+      fetchConversations({ silent: true });
     });
 
     conversationSubscriptionRef.current = unsubscribe;
-  }, []);
+  }, [fetchConversations]);
 
   // =========================================================================
   // EFECTOS
@@ -221,7 +231,7 @@ export function useMessages(options?: UseMessagesOptions) {
         conversationSubscriptionRef.current();
       }
     };
-  }, [autoFetch]);
+  }, [autoFetch, fetchConversations, subscribeToNewConversations]);
 
   /**
    * Suscribirse a mensajes cuando cambie la conversación actual
@@ -230,7 +240,7 @@ export function useMessages(options?: UseMessagesOptions) {
     if (currentConversationId) {
       subscribeToCurrentConversation(currentConversationId);
     }
-  }, [currentConversationId]);
+  }, [currentConversationId, subscribeToCurrentConversation]);
 
   // =========================================================================
   // FUNCIONES DE UTILIDAD
@@ -275,9 +285,12 @@ export function useMessages(options?: UseMessagesOptions) {
     // Estados
     conversations,
     messages,
-    loading,
+    loading: conversationsLoading || messagesLoading || sendingMessage,
     error,
     currentConversationId,
+    conversationsLoading,
+    messagesLoading,
+    sendingMessage,
     
     // Funciones de carga
     fetchConversations,

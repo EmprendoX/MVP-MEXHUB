@@ -14,14 +14,15 @@ import type { ConversationSummary } from '@/lib/api/messages';
 export default function Messages() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
-  const { 
-    conversations, 
-    messages, 
-    loading: messagesLoading, 
+  const {
+    conversations,
+    messages,
+    conversationsLoading,
+    messagesLoading,
+    sendingMessage,
     error: messagesError,
     sendMessage,
-    selectConversation,
-    currentConversationId
+    selectConversation
   } = useMessages();
   
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
@@ -40,22 +41,22 @@ export default function Messages() {
   useEffect(() => {
     const { userId } = router.query;
     if (userId && typeof userId === 'string') {
-      setTargetUserId(userId);
-      
       // Buscar conversación existente con este usuario
-      const existingConversation = conversations.find(conv => 
+      const existingConversation = conversations.find(conv =>
         conv.user.id === userId
       );
-      
+
       if (existingConversation) {
         // Si existe la conversación, seleccionarla
         setSelectedConversation(existingConversation.id);
         selectConversation(existingConversation.id);
+        setTargetUserId(null);
       } else {
         // Si no existe, preparar para crear una nueva conversación
         setSelectedConversation(null);
+        setTargetUserId(userId);
       }
-      
+
       // Limpiar query params después de procesarlos
       router.replace('/messages', undefined, { shallow: true });
     }
@@ -114,6 +115,7 @@ export default function Messages() {
         const result = await sendMessage(selectedConversation, newMessage);
         if (result.success) {
           setNewMessage('');
+          setTargetUserId(null);
         } else {
           console.error('Error enviando mensaje:', result.error);
         }
@@ -122,7 +124,15 @@ export default function Messages() {
         const result = await sendMessage(targetUserId, newMessage);
         if (result.success) {
           setNewMessage('');
-          // La conversación se creará automáticamente
+          const conversationUserId =
+            result.data?.sender_id === user.id ? result.data?.receiver_id : result.data?.sender_id;
+
+          if (conversationUserId) {
+            setSelectedConversation(conversationUserId);
+            selectConversation(conversationUserId);
+          }
+
+          setTargetUserId(null);
         } else {
           console.error('Error enviando mensaje:', result.error);
         }
@@ -135,6 +145,7 @@ export default function Messages() {
       onClick={() => {
         setSelectedConversation(conversation.id);
         selectConversation(conversation.id);
+        setTargetUserId(null);
         setIsMobileView(false);
       }}
       className={`p-4 cursor-pointer transition-colors duration-200 ${
@@ -218,7 +229,7 @@ export default function Messages() {
             </div>
             
             <div className="overflow-y-auto h-[calc(100%-80px)]">
-              {messagesLoading ? (
+              {conversationsLoading ? (
                 <div className="p-4 text-center text-text-soft">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
                   Cargando conversaciones...
@@ -237,6 +248,13 @@ export default function Messages() {
 
           {/* Chat Area */}
           <div className="flex-1 flex flex-col">
+            {messagesError && (
+              <div className="px-4 pt-4">
+                <div className="bg-red-500/20 text-red-200 text-sm px-4 py-2 rounded-lg">
+                  {messagesError}
+                </div>
+              </div>
+            )}
             {selectedConv ? (
               <>
                 {/* Chat Header */}
@@ -314,7 +332,8 @@ export default function Messages() {
                     />
                     <button
                       type="submit"
-                      className="btn-primary px-6"
+                      className="btn-primary px-6 disabled:opacity-60 disabled:cursor-not-allowed"
+                      disabled={sendingMessage || !newMessage.trim()}
                     >
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
@@ -377,7 +396,7 @@ export default function Messages() {
                     />
                     <button
                       type="submit"
-                      disabled={!newMessage.trim()}
+                      disabled={sendingMessage || !newMessage.trim()}
                       className="bg-primary text-dark px-6 py-3 rounded-lg font-medium hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -424,7 +443,7 @@ export default function Messages() {
             </div>
             
             <div className="overflow-y-auto h-[calc(100%-80px)]">
-              {messagesLoading ? (
+              {conversationsLoading ? (
                 <div className="p-4 text-center text-text-soft">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
                   Cargando conversaciones...
