@@ -2,84 +2,116 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Estilos base para HUBMEX.COM */
+/* HUBMEX — Editorial Charcoal theme */
 @layer base {
   html {
     font-family: 'Inter', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
-  
+
   body {
-    @apply bg-dark-500 text-text-light antialiased;
+    @apply bg-white text-text-light;
   }
-  
+
+  /* Strong typographic hierarchy */
+  h1, h2, h3, h4 {
+    @apply tracking-tight;
+  }
+
   * {
     @apply border-gray-light;
   }
 }
 
-/* Componentes personalizados */
+/* Components */
 @layer components {
+  /* PRIMARY: charcoal — used for 95% of buttons (default brand action) */
   .btn-primary {
-    @apply bg-primary hover:bg-primary-600 text-dark font-medium py-2 px-4 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2;
+    @apply inline-flex items-center justify-center bg-primary hover:bg-zinc-800 text-white font-medium py-2.5 px-5 rounded-lg transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2;
   }
-  
+
+  /* ACCENT: electric blue — top-priority CTAs only ("Continue", hero conversion) */
+  .btn-accent {
+    @apply inline-flex items-center justify-center bg-accent hover:bg-accent-600 text-white font-medium py-2.5 px-5 rounded-lg transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2;
+  }
+
+  /* SECONDARY: neutral surface */
   .btn-secondary {
-    @apply bg-light-bg hover:bg-gray-light text-text-light font-medium py-2 px-4 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2;
+    @apply inline-flex items-center justify-center bg-light-bg hover:bg-gray-light text-text-light font-medium py-2.5 px-5 rounded-lg transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2;
   }
-  
+
+  /* OUTLINE: ghost button — charcoal border, charcoal text */
   .btn-outline {
-    @apply border-2 border-primary text-primary hover:bg-primary hover:text-dark font-medium py-2 px-4 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2;
+    @apply inline-flex items-center justify-center border border-gray-light text-text-light hover:border-text-light hover:bg-light-bg font-medium py-2.5 px-5 rounded-lg transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2;
   }
-  
+
   .btn-success {
-    @apply bg-success hover:bg-green-500 text-dark font-medium py-2 px-4 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-success focus:ring-offset-2;
+    @apply inline-flex items-center justify-center bg-success hover:bg-success-600 text-white font-medium py-2.5 px-5 rounded-lg transition-colors duration-150;
   }
-  
+
   .btn-alert {
-    @apply bg-alert hover:bg-red-600 text-text-light font-medium py-2 px-4 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-alert focus:ring-offset-2;
+    @apply inline-flex items-center justify-center bg-alert hover:bg-alert-600 text-white font-medium py-2.5 px-5 rounded-lg transition-colors duration-150;
   }
-  
+
+  /* Cards */
   .card {
-    @apply bg-light-bg rounded-xl shadow-soft border border-gray-light p-6;
+    @apply bg-white rounded-xl shadow-soft border border-gray-light p-6;
   }
-  
+
   .card-hover {
-    @apply card hover:shadow-card transition-shadow duration-300 cursor-pointer;
+    @apply card hover:shadow-card hover:-translate-y-0.5 transition-all duration-200 cursor-pointer;
   }
-  
+
+  /* Form fields */
   .input-field {
-    @apply w-full px-3 py-2 border border-gray-light rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200 bg-light-bg text-text-light placeholder-text-soft;
+    @apply w-full px-3.5 py-2.5 border border-gray-light rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all duration-150 bg-white text-text-light placeholder:text-text-soft;
   }
-  
+
   .textarea-field {
     @apply input-field resize-none;
   }
-  
+
   .select-field {
-    @apply input-field appearance-none bg-light-bg;
+    @apply input-field appearance-none bg-white;
+  }
+
+  /* Anchor links */
+  .link-accent {
+    @apply text-accent hover:text-accent-600 transition-colors underline-offset-2 hover:underline;
   }
 }
 
-/* Utilidades personalizadas */
+/* Utilities */
 @layer utilities {
+  /* Brand accent emphasis — used SPARINGLY on key headline words */
   .text-gradient {
-    @apply bg-gradient-to-r from-primary to-success bg-clip-text text-transparent;
+    @apply text-accent;
   }
-  
+
+  /* For the CTA section — solid charcoal, not a gradient */
   .bg-gradient-hubmex {
-    @apply bg-gradient-to-br from-primary via-primary-600 to-success;
+    background-color: #0A0A0A;
   }
-  
+
+  .bg-gradient-mesh {
+    background-image:
+      radial-gradient(at 20% 0%, rgba(37, 99, 235, 0.05) 0px, transparent 50%),
+      radial-gradient(at 80% 100%, rgba(10, 10, 10, 0.04) 0px, transparent 50%);
+  }
+
   .shadow-hubmex {
-    box-shadow: 0 10px 25px -5px rgba(0, 200, 240, 0.1), 0 10px 10px -5px rgba(0, 200, 240, 0.04);
+    box-shadow:
+      0 8px 16px -4px rgba(10, 10, 10, 0.08),
+      0 4px 8px -2px rgba(10, 10, 10, 0.04);
   }
 }
 
-/* Animaciones personalizadas */
+/* Animations */
 @keyframes fadeInUp {
   from {
     opacity: 0;
-    transform: translateY(30px);
+    transform: translateY(8px);
   }
   to {
     opacity: 1;
@@ -88,34 +120,28 @@
 }
 
 .animate-fade-in-up {
-  animation: fadeInUp 0.6s ease-out;
+  animation: fadeInUp 0.3s ease-out;
 }
 
-/* Responsive breakpoints personalizados */
-@media (max-width: 640px) {
-  .container {
-    @apply px-4;
-  }
-}
-
-/* Estados de carga */
+/* Loading skeleton */
 .loading-skeleton {
-  @apply animate-pulse bg-gray-200 rounded;
+  @apply animate-pulse bg-gray-light rounded;
 }
 
-/* Scrollbar personalizado */
+/* Scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  @apply bg-gray-100;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-primary rounded-full;
+  @apply bg-gray-light rounded-full;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-primary-600;
+  @apply bg-text-soft;
 }

@@ -108,7 +108,7 @@ const LoginForm = ({ onSubmit, loading = false, className = '' }: LoginFormProps
           </span>
         </label>
         
-        <a href="#" className="text-sm text-primary hover:text-primary-600 transition-colors">
+        <a href="#" className="text-sm text-accent hover:text-accent-600 transition-colors">
           ¿Olvidaste tu contraseña?
         </a>
       </div>
@@ -127,7 +127,7 @@ const LoginForm = ({ onSubmit, loading = false, className = '' }: LoginFormProps
       <div className="text-center">
         <p className="text-text-soft text-sm">
           ¿No tienes cuenta?{' '}
-          <Link href="/register" className="text-primary hover:text-primary-600 transition-colors font-medium">
+          <Link href="/register" className="text-accent hover:text-accent-600 transition-colors font-medium">
             Regístrate aquí
           </Link>
         </p>

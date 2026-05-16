@@ -2,6 +2,7 @@ import '@/styles/globals.css';
 import type { AppProps } from 'next/app';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { TranslationProvider } from '@/contexts/TranslationContext';
+import { ToastProvider } from '@/contexts/ToastContext';
 
 type TranslationsProp = Record<string, Record<string, unknown>>;
 
@@ -14,7 +15,9 @@ export default function App({ Component, pageProps, router }: CustomAppProps) {
   return (
     <AuthProvider>
       <TranslationProvider locale={locale} translations={translations}>
-        <Component {...pageProps} />
+        <ToastProvider>
+          <Component {...pageProps} />
+        </ToastProvider>
       </TranslationProvider>
     </AuthProvider>
   );

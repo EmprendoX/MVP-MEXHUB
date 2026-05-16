@@ -460,7 +460,7 @@ export default function Dashboard() {
                     <div className="card">
                       <div className="flex items-center justify-between mb-4">
                         <h3 className="text-lg font-semibold text-text-light">Publicaciones Recientes</h3>
-                        <Link href="#" className="text-primary hover:text-primary-600 text-sm">
+                        <Link href="#" className="text-accent hover:text-accent-600 text-sm">
                           Ver todas
                         </Link>
                       </div>
@@ -484,7 +484,7 @@ export default function Dashboard() {
                     <div className="card">
                       <div className="flex items-center justify-between mb-4">
                         <h3 className="text-lg font-semibold text-text-light">Mensajes Recientes</h3>
-                        <Link href="#" className="text-primary hover:text-primary-600 text-sm">
+                        <Link href="#" className="text-accent hover:text-accent-600 text-sm">
                           Ver todos
                         </Link>
                       </div>
@@ -577,7 +577,7 @@ export default function Dashboard() {
                                   <div className="flex space-x-2">
                                     <button 
                                       onClick={() => handleEditClick(listing)}
-                                      className="text-primary hover:text-primary-600 text-sm"
+                                      className="text-accent hover:text-accent-600 text-sm"
                                     >
                                       Editar
                                     </button>

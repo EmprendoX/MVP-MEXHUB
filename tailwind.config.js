@@ -8,62 +8,88 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // Paleta de colores HUBMEX
+        // PRIMARY = BRAND CHARCOAL (used for ~95% of UI: text emphasis, buttons, brand mark)
         primary: {
-          50: '#e6f9ff',
-          100: '#ccf3ff',
-          200: '#99e7ff',
-          300: '#66dbff',
-          400: '#33cfff',
-          500: '#00C8F0',
-          600: '#00b0d8',
-          700: '#0098c0',
-          800: '#0080a8',
-          900: '#006890',
-          DEFAULT: '#00C8F0',
+          50: '#FAFAFA',
+          100: '#F4F4F5',
+          200: '#E4E4E7',
+          300: '#D4D4D8',
+          400: '#52525B',
+          500: '#0A0A0A',
+          600: '#000000',
+          700: '#000000',
+          800: '#000000',
+          900: '#000000',
+          DEFAULT: '#0A0A0A',
         },
-        dark: {
-          50: '#f0f2f5',
-          100: '#e1e6ea',
-          200: '#c3cdd5',
-          300: '#a5b4c0',
-          400: '#879bab',
-          500: '#0B1221',
-          600: '#0a0f1e',
-          700: '#090d1b',
-          800: '#080b18',
-          900: '#070915',
-          DEFAULT: '#0B1221',
+        // ACCENT = ELECTRIC BLUE (used SPARINGLY: top-priority CTAs, links, focus rings)
+        accent: {
+          50: '#EFF6FF',
+          100: '#DBEAFE',
+          200: '#BFDBFE',
+          300: '#93C5FD',
+          400: '#60A5FA',
+          500: '#2563EB',
+          600: '#1D4ED8',
+          700: '#1E40AF',
+          800: '#1E3A8A',
+          900: '#172554',
+          DEFAULT: '#2563EB',
         },
-        'light-bg': '#152332',
-        'text-light': '#FFFFFF',
-        'text-soft': '#B4C5D2',
+        // SUCCESS — forest emerald (deeper than the consumer green)
         success: {
-          DEFAULT: '#00E6A8',
-          500: '#00E6A8',
+          DEFAULT: '#047857',
+          500: '#047857',
+          600: '#065F46',
         },
+        // ALERT — deep red
         alert: {
-          DEFAULT: '#FF4D4F',
-          500: '#FF4D4F',
+          DEFAULT: '#B91C1C',
+          500: '#B91C1C',
+          600: '#991B1B',
         },
-        'gray-light': '#E9EDF2',
+        // ---------------- SEMANTIC TOKENS (light theme) ----------------
+        // `dark` family — keeps name for backward compat but maps to LIGHT surfaces.
+        //   dark.500/DEFAULT = page background (white).
+        dark: {
+          50: '#FFFFFF',
+          100: '#FAFAF9',
+          200: '#F4F4F5',
+          300: '#E4E4E7',
+          400: '#A1A1AA',
+          500: '#FFFFFF',
+          600: '#FAFAF9',
+          700: '#27272A',
+          800: '#18181B',
+          900: '#09090B',
+          DEFAULT: '#FFFFFF',
+        },
+        // Stone surface (for alternating sections, sidebars, subtle blocks)
+        'light-bg': '#FAFAF9',
+        // Primary text — zinc-900
+        'text-light': '#18181B',
+        // Secondary/muted text — zinc-500
+        'text-soft': '#71717A',
+        // Border — zinc-200
+        'gray-light': '#E4E4E7',
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
       },
       boxShadow: {
-        'soft': '0 2px 15px -3px rgba(0, 0, 0, 0.07), 0 10px 20px -2px rgba(0, 0, 0, 0.04)',
-        'card': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+        soft: '0 1px 2px 0 rgba(10, 10, 10, 0.04), 0 1px 3px 0 rgba(10, 10, 10, 0.06)',
+        card: '0 4px 12px -2px rgba(10, 10, 10, 0.06), 0 2px 4px -1px rgba(10, 10, 10, 0.04)',
+        elevated: '0 12px 32px -8px rgba(10, 10, 10, 0.12), 0 4px 12px -2px rgba(10, 10, 10, 0.06)',
       },
       borderRadius: {
-        'xl': '1rem',
-        '2xl': '1.5rem',
+        xl: '0.75rem',
+        '2xl': '1rem',
       },
       spacing: {
-        '18': '4.5rem',
-        '88': '22rem',
+        18: '4.5rem',
+        88: '22rem',
       },
     },
   },
   plugins: [],
-}
+};

@@ -265,11 +265,11 @@ const RegisterForm = ({ onSubmit, loading = false, className = '' }: RegisterFor
         />
         <label className="text-sm text-text-soft">
           Acepto los{' '}
-          <a href="/terms" className="text-primary hover:text-primary-600 transition-colors">
+          <a href="/terms" className="text-accent hover:text-accent-600 transition-colors">
             Términos de Servicio
           </a>{' '}
           y la{' '}
-          <a href="/privacy" className="text-primary hover:text-primary-600 transition-colors">
+          <a href="/privacy" className="text-accent hover:text-accent-600 transition-colors">
             Política de Privacidad
           </a>
         </label>
@@ -289,7 +289,7 @@ const RegisterForm = ({ onSubmit, loading = false, className = '' }: RegisterFor
       <div className="text-center">
         <p className="text-text-soft text-sm">
           ¿Ya tienes cuenta?{' '}
-          <Link href="/login" className="text-primary hover:text-primary-600 transition-colors font-medium">
+          <Link href="/login" className="text-accent hover:text-accent-600 transition-colors font-medium">
             Inicia sesión aquí
           </Link>
         </p>

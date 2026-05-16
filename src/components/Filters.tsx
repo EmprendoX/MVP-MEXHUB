@@ -382,7 +382,7 @@ const Filters = ({ onFiltersChange, isOpen = false, onClose }: FiltersProps) => 
       {/* Mobile Modal */}
       {isOpen && (
         <div className="fixed inset-0 z-50 md:hidden">
-          <div className="fixed inset-0 bg-dark-500 bg-opacity-50" onClick={onClose}></div>
+          <div className="fixed inset-0 bg-black/40" onClick={onClose}></div>
           <div className="fixed top-0 left-0 w-80 h-full bg-light-bg p-6 overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-bold text-text-light">{t('filters.title')}</h2>

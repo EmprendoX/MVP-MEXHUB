@@ -1,0 +1,303 @@
+{
+  "verticalName": "Talento Freelance",
+  "verticalShort": "Freelance",
+  "verticalTagline": "Talento mexicano para el mundo",
+  "verticalDescription": "Contrata a freelancers mexicanos de primer nivel en diseño, programación, video, marketing y más.",
+  "sellerLevels": {
+    "new": "Nuevo",
+    "level1": "Nivel 1",
+    "level2": "Nivel 2",
+    "top": "Top Rated"
+  },
+  "card": {
+    "from": "Desde",
+    "currency": "USD",
+    "rating": "Calificación",
+    "reviews": "{{count}} reseñas",
+    "reviewSingle": "{{count}} reseña",
+    "ordersInQueue": "{{count}} pedidos en cola",
+    "viewGig": "Ver servicio",
+    "deliveryDays": "Entrega en {{days}} días",
+    "deliveryOneDay": "Entrega en 1 día"
+  },
+  "packages": {
+    "title": "Paquetes",
+    "basic": "Básico",
+    "standard": "Estándar",
+    "premium": "Premium",
+    "delivery": "Tiempo de entrega",
+    "revisions": "Revisiones",
+    "unlimited": "Ilimitadas",
+    "select": "Continuar",
+    "days": "días",
+    "day": "día"
+  },
+  "filters": {
+    "title": "Filtros",
+    "categories": "Categorías",
+    "subcategories": "Subcategorías",
+    "sellerLevel": "Nivel del talento",
+    "languages": "Idiomas que habla",
+    "deliveryTime": "Tiempo de entrega",
+    "deliveryAny": "Cualquiera",
+    "delivery1": "Hasta 24 horas",
+    "delivery3": "Hasta 3 días",
+    "delivery7": "Hasta 7 días",
+    "budget": "Presupuesto (USD)",
+    "minRating": "Calificación mínima",
+    "stars": "estrellas",
+    "apply": "Aplicar filtros",
+    "clear": "Limpiar"
+  },
+  "vertical": {
+    "manufacturing": "Manufactura",
+    "manufacturingShort": "Manufactura",
+    "freelance": "Talento Freelance",
+    "freelanceShort": "Freelance",
+    "switchTo": "Cambiar a",
+    "toggleAria": "Cambiar vertical"
+  },
+  "home": {
+    "freelanceSection": {
+      "title": "Talento Freelance",
+      "highlight": "Mexicano",
+      "description": "Contrata a los mejores freelancers de México y trabaja con ellos desde cualquier parte del mundo.",
+      "viewAll": "Ver todos los servicios"
+    },
+    "popularIn": "Más populares en {{category}}",
+    "seeAllIn": "Ver todos",
+    "carousel": {
+      "prev": "Anterior",
+      "next": "Siguiente"
+    },
+    "categoriesSection": {
+      "title": "Explora por",
+      "highlight": "Categoría",
+      "description": "Encuentra el servicio perfecto para tu proyecto."
+    },
+    "whyMexico": {
+      "title": "¿Por qué contratar talento",
+      "highlight": "Mexicano",
+      "description": "Mismo huso horario, alta calidad, comunicación bilingüe y tarifas competitivas.",
+      "items": {
+        "timezone": {
+          "title": "Mismo huso horario",
+          "description": "Trabaja con freelancers en tu horario laboral, sin desfasajes."
+        },
+        "bilingual": {
+          "title": "100% bilingüe",
+          "description": "Comunicación fluida en inglés y español sin malentendidos."
+        },
+        "quality": {
+          "title": "Calidad premium",
+          "description": "Profesionales con experiencia en clientes globales y portfolios sólidos."
+        },
+        "price": {
+          "title": "Precios justos",
+          "description": "Tarifas competitivas comparadas con USA, Canadá y Europa."
+        }
+      }
+    }
+  },
+  "explore": {
+    "title": "Talento Freelance",
+    "subtitle": "Encuentra al freelancer mexicano ideal para tu proyecto.",
+    "searchPlaceholder": "Buscar logos, sitios web, videos, traducción..."
+  },
+  "gigDetail": {
+    "back": "Volver",
+    "aboutGig": "Sobre este servicio",
+    "aboutSeller": "Sobre el freelancer",
+    "reviews": "Reseñas",
+    "faq": "Preguntas frecuentes",
+    "moreFromSeller": "Más servicios de este freelancer",
+    "contactSeller": "Contactar al freelancer",
+    "ordersInQueue": "{{count}} pedidos en cola",
+    "freeRevisions": "Revisiones incluidas",
+    "verifiedSeller": "Vendedor verificado",
+    "notFound": "Servicio no encontrado",
+    "notFoundDescription": "El servicio que buscas no existe o fue retirado.",
+    "browseAll": "Ver todos los servicios"
+  },
+  "sellerProfile": {
+    "memberSince": "Miembro desde",
+    "languages": "Idiomas",
+    "lastDelivery": "Última entrega",
+    "responseTime": "Tiempo de respuesta",
+    "responseHours": "{{hours}} hora(s)",
+    "ordersCompleted": "Pedidos completados",
+    "about": "Acerca de",
+    "activeGigs": "Servicios activos",
+    "noGigs": "Este freelancer aún no tiene servicios publicados.",
+    "contact": "Contactar",
+    "notFound": "Freelancer no encontrado",
+    "notFoundDescription": "Este perfil no existe o fue retirado."
+  },
+  "review": {
+    "verified": "Compra verificada",
+    "daysAgo": "Hace {{days}} días",
+    "dayAgo": "Hace 1 día",
+    "package": "Paquete",
+    "spent": "Gastó",
+    "duration": "Duración",
+    "days": "{{count}} días",
+    "day": "1 día"
+  },
+  "favorites": {
+    "add": "Agregar a favoritos",
+    "remove": "Quitar de favoritos",
+    "title": "Mis favoritos",
+    "empty": "Aún no tienes servicios favoritos",
+    "emptyDescription": "Cuando marques un servicio con el corazón, aparecerá aquí.",
+    "browse": "Explorar servicios",
+    "added": "Agregado a favoritos",
+    "removed": "Quitado de favoritos"
+  },
+  "toast": {
+    "published": "¡Servicio publicado!",
+    "deleted": "Servicio eliminado",
+    "close": "Cerrar"
+  },
+  "sort": {
+    "label": "Ordenar por",
+    "options": {
+      "relevance": "Relevancia",
+      "priceLow": "Precio: menor a mayor",
+      "priceHigh": "Precio: mayor a menor",
+      "rating": "Mejor calificado",
+      "newest": "Más reciente",
+      "deliveryFast": "Entrega más rápida"
+    }
+  },
+  "stickyCta": {
+    "from": "Desde",
+    "continue": "Continuar"
+  },
+  "notFound": {
+    "title": "Página no encontrada",
+    "description": "La página que buscas no existe o fue movida.",
+    "goHome": "Volver al inicio",
+    "browseGigs": "Explorar servicios"
+  },
+  "wizard": {
+    "title": "Publicar un servicio",
+    "subtitle": "Comparte tu talento con clientes de todo el mundo",
+    "stepLabel": "Paso {{current}} de {{total}}",
+    "steps": {
+      "overview": "Resumen",
+      "pricing": "Precios",
+      "description": "Descripción",
+      "gallery": "Galería",
+      "publish": "Publicar"
+    },
+    "back": "Atrás",
+    "next": "Siguiente",
+    "publish": "Publicar servicio",
+    "publishing": "Publicando...",
+    "successTitle": "¡Servicio publicado!",
+    "successDescription": "Tu servicio ahora aparece en tu dashboard.",
+    "viewDashboard": "Ver mi dashboard",
+    "publishAnother": "Publicar otro",
+    "overview": {
+      "title": "Cuéntanos sobre tu servicio",
+      "gigTitle": "Título del servicio",
+      "gigTitleHint": "Empieza con 'Diseñaré...', 'Desarrollaré...', 'Editaré...'",
+      "gigTitlePlaceholder": "Diseñaré tu logo profesional en 24 horas",
+      "category": "Categoría",
+      "selectCategory": "Selecciona una categoría",
+      "subcategory": "Subcategoría",
+      "selectSubcategory": "Selecciona una subcategoría",
+      "tags": "Etiquetas (separadas por coma)",
+      "tagsPlaceholder": "logo, branding, minimalista"
+    },
+    "pricing": {
+      "title": "Define tus paquetes",
+      "description": "Tres niveles ayudan a que más clientes te contraten.",
+      "packageTitle": "Nombre del paquete",
+      "packageDescription": "Qué incluye",
+      "price": "Precio (USD)",
+      "delivery": "Días de entrega",
+      "revisions": "Revisiones",
+      "features": "Características (una por línea)"
+    },
+    "descriptionStep": {
+      "title": "Describe tu servicio en detalle",
+      "description": "Explica qué entregas, qué necesitas del cliente y por qué eres la mejor opción.",
+      "placeholder": "Soy diseñador con 5 años de experiencia. Diseño logos minimalistas y modernos. Mi proceso incluye..."
+    },
+    "gallery": {
+      "title": "Agrega imágenes a tu servicio",
+      "description": "Pega URLs de imágenes (una por línea). Pronto podrás subir archivos directamente.",
+      "placeholder": "https://...\nhttps://..."
+    },
+    "review": {
+      "title": "Revisa antes de publicar",
+      "description": "Verifica que todo se vea bien. Podrás editarlo después desde tu dashboard.",
+      "preview": "Vista previa"
+    },
+    "errors": {
+      "missingTitle": "El título es obligatorio",
+      "missingCategory": "Selecciona una categoría",
+      "missingSubcategory": "Selecciona una subcategoría",
+      "missingPrice": "Define un precio para los 3 paquetes",
+      "missingDescription": "Agrega una descripción"
+    }
+  },
+  "dashboard": {
+    "title": "Dashboard Freelance",
+    "welcome": "Bienvenido de vuelta",
+    "demoNotice": "Estás en modo demo. Tus datos viven en este navegador hasta conectar la base de datos.",
+    "newGig": "Publicar nuevo servicio",
+    "stats": {
+      "activeGigs": "Servicios activos",
+      "ordersInQueue": "Pedidos en cola",
+      "completedOrders": "Pedidos completados",
+      "earnings": "Ganancias (mock)"
+    },
+    "tabs": {
+      "gigs": "Mis servicios",
+      "orders": "Pedidos",
+      "earnings": "Ganancias",
+      "profile": "Perfil"
+    },
+    "gigs": {
+      "empty": "Aún no has publicado servicios",
+      "emptyDescription": "Crea tu primer servicio para empezar a recibir pedidos.",
+      "demoBadge": "DEMO",
+      "edit": "Editar",
+      "delete": "Eliminar",
+      "view": "Ver"
+    },
+    "orders": {
+      "title": "Pedidos recientes",
+      "demoBadge": "Datos de ejemplo",
+      "columns": {
+        "buyer": "Cliente",
+        "service": "Servicio",
+        "package": "Paquete",
+        "price": "Precio",
+        "status": "Estado",
+        "due": "Entrega"
+      },
+      "status": {
+        "active": "Activo",
+        "delivered": "Entregado",
+        "completed": "Completado",
+        "cancelled": "Cancelado"
+      }
+    },
+    "earnings": {
+      "title": "Ganancias y métricas",
+      "demoBadge": "Datos de ejemplo",
+      "totalEarned": "Total ganado",
+      "lastMonth": "Último mes",
+      "pendingClearance": "Pendiente de liberación",
+      "available": "Disponible para retirar",
+      "monthlyChart": "Por mes (USD)"
+    },
+    "profile": {
+      "title": "Perfil de freelancer",
+      "description": "Esta sección estará disponible cuando conectemos la base de datos."
+    }
+  }
+}

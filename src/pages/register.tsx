@@ -124,7 +124,7 @@ export default function RegisterPage() {
 
           {/* Links adicionales */}
           <div className="mt-6 text-center">
-            <Link href="/" className="text-text-soft hover:text-primary transition-colors text-sm">
+            <Link href="/" className="text-text-soft hover:text-accent transition-colors text-sm">
               ← Volver al inicio
             </Link>
           </div>

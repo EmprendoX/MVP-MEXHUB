@@ -95,7 +95,7 @@ const CardItem = ({
       {/* Content */}
       <div className="space-y-3">
         {/* Title */}
-        <h3 className="text-lg font-semibold text-text-light line-clamp-2 group-hover:text-primary transition-colors duration-200">
+        <h3 className="text-lg font-semibold text-text-light line-clamp-2 group-hover:text-accent transition-colors duration-200">
           {titulo}
         </h3>
 

@@ -1,0 +1,303 @@
+{
+  "verticalName": "Freelance Talent",
+  "verticalShort": "Freelance",
+  "verticalTagline": "Mexican talent for the world",
+  "verticalDescription": "Hire top Mexican freelancers in design, programming, video, marketing and more.",
+  "sellerLevels": {
+    "new": "New",
+    "level1": "Level 1",
+    "level2": "Level 2",
+    "top": "Top Rated"
+  },
+  "card": {
+    "from": "From",
+    "currency": "USD",
+    "rating": "Rating",
+    "reviews": "{{count}} reviews",
+    "reviewSingle": "{{count}} review",
+    "ordersInQueue": "{{count}} orders in queue",
+    "viewGig": "View gig",
+    "deliveryDays": "{{days}}-day delivery",
+    "deliveryOneDay": "1-day delivery"
+  },
+  "packages": {
+    "title": "Packages",
+    "basic": "Basic",
+    "standard": "Standard",
+    "premium": "Premium",
+    "delivery": "Delivery time",
+    "revisions": "Revisions",
+    "unlimited": "Unlimited",
+    "select": "Continue",
+    "days": "days",
+    "day": "day"
+  },
+  "filters": {
+    "title": "Filters",
+    "categories": "Categories",
+    "subcategories": "Subcategories",
+    "sellerLevel": "Seller level",
+    "languages": "Spoken languages",
+    "deliveryTime": "Delivery time",
+    "deliveryAny": "Any",
+    "delivery1": "Up to 24 hours",
+    "delivery3": "Up to 3 days",
+    "delivery7": "Up to 7 days",
+    "budget": "Budget (USD)",
+    "minRating": "Minimum rating",
+    "stars": "stars",
+    "apply": "Apply filters",
+    "clear": "Clear"
+  },
+  "vertical": {
+    "manufacturing": "Manufacturing",
+    "manufacturingShort": "Manufacturing",
+    "freelance": "Freelance Talent",
+    "freelanceShort": "Freelance",
+    "switchTo": "Switch to",
+    "toggleAria": "Toggle vertical"
+  },
+  "home": {
+    "freelanceSection": {
+      "title": "Freelance Talent",
+      "highlight": "Mexican",
+      "description": "Hire the best Mexican freelancers and work with them from anywhere in the world.",
+      "viewAll": "View all services"
+    },
+    "popularIn": "Most popular in {{category}}",
+    "seeAllIn": "See all",
+    "carousel": {
+      "prev": "Previous",
+      "next": "Next"
+    },
+    "categoriesSection": {
+      "title": "Browse by",
+      "highlight": "Category",
+      "description": "Find the perfect service for your project."
+    },
+    "whyMexico": {
+      "title": "Why hire",
+      "highlight": "Mexican talent",
+      "description": "Same time zone, high quality, bilingual communication and competitive rates.",
+      "items": {
+        "timezone": {
+          "title": "Same time zone",
+          "description": "Work with freelancers during your business hours, no lag."
+        },
+        "bilingual": {
+          "title": "100% bilingual",
+          "description": "Fluent communication in English and Spanish without misunderstandings."
+        },
+        "quality": {
+          "title": "Premium quality",
+          "description": "Professionals with global client experience and strong portfolios."
+        },
+        "price": {
+          "title": "Fair pricing",
+          "description": "Competitive rates compared to USA, Canada and Europe."
+        }
+      }
+    }
+  },
+  "explore": {
+    "title": "Freelance Talent",
+    "subtitle": "Find the ideal Mexican freelancer for your project.",
+    "searchPlaceholder": "Search logos, websites, videos, translation..."
+  },
+  "gigDetail": {
+    "back": "Back",
+    "aboutGig": "About this gig",
+    "aboutSeller": "About the seller",
+    "reviews": "Reviews",
+    "faq": "FAQ",
+    "moreFromSeller": "More gigs from this seller",
+    "contactSeller": "Contact seller",
+    "ordersInQueue": "{{count}} orders in queue",
+    "freeRevisions": "Revisions included",
+    "verifiedSeller": "Verified seller",
+    "notFound": "Gig not found",
+    "notFoundDescription": "The gig you're looking for doesn't exist or was removed.",
+    "browseAll": "Browse all gigs"
+  },
+  "sellerProfile": {
+    "memberSince": "Member since",
+    "languages": "Languages",
+    "lastDelivery": "Last delivery",
+    "responseTime": "Response time",
+    "responseHours": "{{hours}} hour(s)",
+    "ordersCompleted": "Orders completed",
+    "about": "About",
+    "activeGigs": "Active gigs",
+    "noGigs": "This freelancer hasn't published any gigs yet.",
+    "contact": "Contact",
+    "notFound": "Freelancer not found",
+    "notFoundDescription": "This profile doesn't exist or was removed."
+  },
+  "review": {
+    "verified": "Verified purchase",
+    "daysAgo": "{{days}} days ago",
+    "dayAgo": "1 day ago",
+    "package": "Package",
+    "spent": "Spent",
+    "duration": "Duration",
+    "days": "{{count}} days",
+    "day": "1 day"
+  },
+  "favorites": {
+    "add": "Add to favorites",
+    "remove": "Remove from favorites",
+    "title": "My favorites",
+    "empty": "You don't have any favorite gigs yet",
+    "emptyDescription": "When you tap the heart on a gig, it will show up here.",
+    "browse": "Browse gigs",
+    "added": "Added to favorites",
+    "removed": "Removed from favorites"
+  },
+  "toast": {
+    "published": "Gig published!",
+    "deleted": "Gig deleted",
+    "close": "Close"
+  },
+  "sort": {
+    "label": "Sort by",
+    "options": {
+      "relevance": "Relevance",
+      "priceLow": "Price: low to high",
+      "priceHigh": "Price: high to low",
+      "rating": "Best rating",
+      "newest": "Newest",
+      "deliveryFast": "Fastest delivery"
+    }
+  },
+  "stickyCta": {
+    "from": "From",
+    "continue": "Continue"
+  },
+  "notFound": {
+    "title": "Page not found",
+    "description": "The page you're looking for doesn't exist or was moved.",
+    "goHome": "Go home",
+    "browseGigs": "Browse gigs"
+  },
+  "wizard": {
+    "title": "Publish a gig",
+    "subtitle": "Share your talent with clients worldwide",
+    "stepLabel": "Step {{current}} of {{total}}",
+    "steps": {
+      "overview": "Overview",
+      "pricing": "Pricing",
+      "description": "Description",
+      "gallery": "Gallery",
+      "publish": "Publish"
+    },
+    "back": "Back",
+    "next": "Next",
+    "publish": "Publish gig",
+    "publishing": "Publishing...",
+    "successTitle": "Gig published!",
+    "successDescription": "Your gig now shows up in your dashboard.",
+    "viewDashboard": "View my dashboard",
+    "publishAnother": "Publish another",
+    "overview": {
+      "title": "Tell us about your gig",
+      "gigTitle": "Gig title",
+      "gigTitleHint": "Start with 'I will design...', 'I will build...', 'I will edit...'",
+      "gigTitlePlaceholder": "I will design your professional logo in 24 hours",
+      "category": "Category",
+      "selectCategory": "Select a category",
+      "subcategory": "Subcategory",
+      "selectSubcategory": "Select a subcategory",
+      "tags": "Tags (comma-separated)",
+      "tagsPlaceholder": "logo, branding, minimalist"
+    },
+    "pricing": {
+      "title": "Define your packages",
+      "description": "Three tiers help more clients hire you.",
+      "packageTitle": "Package name",
+      "packageDescription": "What's included",
+      "price": "Price (USD)",
+      "delivery": "Delivery days",
+      "revisions": "Revisions",
+      "features": "Features (one per line)"
+    },
+    "descriptionStep": {
+      "title": "Describe your gig in detail",
+      "description": "Explain what you deliver, what you need from the client, and why you're the best choice.",
+      "placeholder": "I'm a designer with 5 years of experience. I design minimalist and modern logos. My process includes..."
+    },
+    "gallery": {
+      "title": "Add images to your gig",
+      "description": "Paste image URLs (one per line). Soon you'll be able to upload files directly.",
+      "placeholder": "https://...\nhttps://..."
+    },
+    "review": {
+      "title": "Review before publishing",
+      "description": "Verify everything looks good. You'll be able to edit later from your dashboard.",
+      "preview": "Preview"
+    },
+    "errors": {
+      "missingTitle": "Title is required",
+      "missingCategory": "Select a category",
+      "missingSubcategory": "Select a subcategory",
+      "missingPrice": "Set a price for all 3 packages",
+      "missingDescription": "Add a description"
+    }
+  },
+  "dashboard": {
+    "title": "Freelance Dashboard",
+    "welcome": "Welcome back",
+    "demoNotice": "You're in demo mode. Your data lives in this browser until we connect the database.",
+    "newGig": "Publish new gig",
+    "stats": {
+      "activeGigs": "Active gigs",
+      "ordersInQueue": "Orders in queue",
+      "completedOrders": "Completed orders",
+      "earnings": "Earnings (mock)"
+    },
+    "tabs": {
+      "gigs": "My gigs",
+      "orders": "Orders",
+      "earnings": "Earnings",
+      "profile": "Profile"
+    },
+    "gigs": {
+      "empty": "You haven't published any gigs yet",
+      "emptyDescription": "Create your first gig to start receiving orders.",
+      "demoBadge": "DEMO",
+      "edit": "Edit",
+      "delete": "Delete",
+      "view": "View"
+    },
+    "orders": {
+      "title": "Recent orders",
+      "demoBadge": "Sample data",
+      "columns": {
+        "buyer": "Buyer",
+        "service": "Gig",
+        "package": "Package",
+        "price": "Price",
+        "status": "Status",
+        "due": "Due"
+      },
+      "status": {
+        "active": "Active",
+        "delivered": "Delivered",
+        "completed": "Completed",
+        "cancelled": "Cancelled"
+      }
+    },
+    "earnings": {
+      "title": "Earnings and metrics",
+      "demoBadge": "Sample data",
+      "totalEarned": "Total earned",
+      "lastMonth": "Last month",
+      "pendingClearance": "Pending clearance",
+      "available": "Available for withdrawal",
+      "monthlyChart": "By month (USD)"
+    },
+    "profile": {
+      "title": "Freelancer profile",
+      "description": "This section will be available once we connect the database."
+    }
+  }
+}

@@ -15,9 +15,9 @@ const Navbar = () => {
     () => [
       { name: t('navigation.home'), href: '/' },
       { name: t('navigation.explore'), href: '/explore' },
-      { name: t('navigation.publish'), href: '/publish' },
-      { name: t('navigation.messages'), href: '/messages' },
-      { name: t('navigation.dashboard'), href: '/dashboard' },
+      { name: t('navigation.publish'), href: '/freelance/publish' },
+      { name: t('navigation.favorites'), href: '/freelance/favorites' },
+      { name: t('navigation.dashboard'), href: '/freelance/dashboard' },
     ],
     [t]
   );
