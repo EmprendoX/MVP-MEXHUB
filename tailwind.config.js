@@ -8,52 +8,59 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // Paleta de colores HUBMEX
+        // Paleta light (marketplace estilo Fiverr).
+        // Los nombres de tokens se mantienen para no romper clases existentes,
+        // pero los valores hex son los del nuevo tema light + verde.
         primary: {
-          50: '#e6f9ff',
-          100: '#ccf3ff',
-          200: '#99e7ff',
-          300: '#66dbff',
-          400: '#33cfff',
-          500: '#00C8F0',
-          600: '#00b0d8',
-          700: '#0098c0',
-          800: '#0080a8',
-          900: '#006890',
-          DEFAULT: '#00C8F0',
+          50: '#E7F9F0',
+          100: '#CFF3E1',
+          200: '#9FE7C4',
+          300: '#6FDBA7',
+          400: '#3FCF8A',
+          500: '#1DBF73',
+          600: '#19A463',
+          700: '#158953',
+          800: '#116E43',
+          900: '#0D5333',
+          DEFAULT: '#1DBF73',
         },
+        // `dark.DEFAULT` = white — usado como `text-dark` en botones sobre primary
+        // (texto blanco sobre verde).
+        // `dark.500` = fondo de página (soft gray).
+        // `dark.800` / `dark.900` mantienen tonos oscuros para scrims/overlays
+        // via `bg-dark-800/60`.
         dark: {
-          50: '#f0f2f5',
-          100: '#e1e6ea',
-          200: '#c3cdd5',
-          300: '#a5b4c0',
-          400: '#879bab',
-          500: '#0B1221',
-          600: '#0a0f1e',
-          700: '#090d1b',
-          800: '#080b18',
-          900: '#070915',
-          DEFAULT: '#0B1221',
+          50: '#FFFFFF',
+          100: '#FAFBFC',
+          200: '#F5F7F9',
+          300: '#EDF0F3',
+          400: '#E4E8EC',
+          500: '#F5F7F9',
+          600: '#EDF0F3',
+          700: '#4A5261',
+          800: '#1A1D24',
+          900: '#0D0F14',
+          DEFAULT: '#FFFFFF',
         },
-        'light-bg': '#152332',
-        'text-light': '#FFFFFF',
-        'text-soft': '#B4C5D2',
+        'light-bg': '#FFFFFF',
+        'text-light': '#1A1D24',
+        'text-soft': '#6E7580',
         success: {
-          DEFAULT: '#00E6A8',
-          500: '#00E6A8',
+          DEFAULT: '#22C55E',
+          500: '#22C55E',
         },
         alert: {
-          DEFAULT: '#FF4D4F',
-          500: '#FF4D4F',
+          DEFAULT: '#EF4444',
+          500: '#EF4444',
         },
-        'gray-light': '#E9EDF2',
+        'gray-light': '#E4E8EC',
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
       },
       boxShadow: {
-        'soft': '0 2px 15px -3px rgba(0, 0, 0, 0.07), 0 10px 20px -2px rgba(0, 0, 0, 0.04)',
-        'card': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+        'soft': '0 1px 3px 0 rgba(20, 30, 40, 0.06), 0 1px 2px 0 rgba(20, 30, 40, 0.04)',
+        'card': '0 4px 12px -2px rgba(20, 30, 40, 0.08), 0 2px 6px -2px rgba(20, 30, 40, 0.04)',
       },
       borderRadius: {
         'xl': '1rem',

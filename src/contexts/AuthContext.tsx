@@ -135,16 +135,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           
           if (session?.user) {
             // Cargar perfil si hay usuario
-            const profile = await authApi.getUserProfile(session.user.id);
-            setUserProfile(profile);
+            try {
+              const profile = await authApi.getUserProfile(session.user.id);
+              if (mounted) {
+                setUserProfile(profile);
+              }
+            } catch (profileError) {
+              console.error('Error cargando perfil inicial:', profileError);
+              // Continuar aunque falle el perfil - el usuario está autenticado
+              if (mounted) {
+                setUserProfile(null);
+              }
+            }
+          } else {
+            setUserProfile(null);
           }
           
-          setLoading(false);
+          if (mounted) {
+            setLoading(false);
+          }
         }
       } catch (error) {
         console.error('Error obteniendo sesión inicial:', error);
         if (mounted) {
-          setLoading(false);
+          setUser(null);
+          setUserProfile(null);
+          setLoading(false); // Asegurar que loading siempre se establece en false
         }
       }
     };

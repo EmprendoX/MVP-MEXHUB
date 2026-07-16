@@ -33,14 +33,40 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# IDE
+# IDE / Agent tools
 .vscode/
 .idea/
+.claude/
+.cursor/
+.taskmaster/
 *.swp
 *.swo
+
+# Diagnostic scripts locales
+test-storage.js
 
 # OS
 Thumbs.db
 
 # Supabase
 .supabase/
+
+# Logs
+logs
+*.log
+dev-debug.log
+# Dependency directories
+# Environment variables
+# Editor directories and files
+.idea
+.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+# OS specific
+
+# Task files
+# tasks.json
+# tasks/ 

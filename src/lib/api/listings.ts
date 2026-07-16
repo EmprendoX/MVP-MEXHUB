@@ -10,6 +10,7 @@
  */
 
 import { supabase, isSupabaseConfigured, logSupabaseMissingConfig } from '@/lib/supabaseClient';
+import { getUserProfile } from '@/lib/api/auth';
 import type {
   ListingInsert,
   ListingUpdate,
@@ -163,6 +164,16 @@ export async function createListing(
   }
 
   try {
+    // Verificar que el usuario tiene perfil en public.users
+    const userProfile = await getUserProfile(userId);
+    if (!userProfile) {
+      console.error('❌ Usuario no tiene perfil en public.users. ID:', userId);
+      return {
+        success: false,
+        error: 'Tu perfil de usuario no está completo. Por favor, completa tu registro primero.',
+      };
+    }
+
     // Validar que el título no esté vacío (NOT NULL en BD)
     if (!data.titulo || !data.titulo.trim()) {
       return {

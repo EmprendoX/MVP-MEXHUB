@@ -5,13 +5,13 @@ import Hero from '@/components/Hero';
 import CardItem from '@/components/CardItem';
 import Footer from '@/components/Footer';
 import type { GetStaticPropsContext } from 'next';
-import { getFeaturedListingsForCards } from '@/lib/api/listings';
-import type { CardItemListing } from '@/lib/api/listings';
+import { listGigs } from '@/lib/mock/gigs';
+import type { Gig } from '@/types/gig';
 import { useTranslation } from '@/contexts/TranslationContext';
 import { loadTranslations } from '@/lib/i18n/loadTranslations';
 
 interface HomeProps {
-  featuredProducts: CardItemListing[];
+  featuredProducts: Gig[];
   translations?: Record<string, Record<string, unknown>>;
 }
 
@@ -41,7 +41,7 @@ export default function Home({ featuredProducts }: HomeProps) {
         <Hero />
 
         {/* Featured Products Section */}
-        <section className="py-20 bg-light-bg">
+        <section className="py-20 bg-dark-500">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-16">
               <h2 className="text-3xl md:text-4xl font-bold text-text-light mb-4">
@@ -54,12 +54,32 @@ export default function Home({ featuredProducts }: HomeProps) {
             {/* Products Grid */}
             {featuredProducts.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {featuredProducts.map((product) => (
-                  <CardItem key={product.id} {...product} />
+                {featuredProducts.map((g) => (
+                  <CardItem
+                    key={g.id}
+                    id={g.id}
+                    slug={g.slug}
+                    titulo={g.titulo}
+                    descripcion={g.descripcion}
+                    categoria={g.categoria}
+                    tipo="servicio"
+                    precio={g.precio_desde}
+                    imagenes={g.imagenes}
+                    proveedor={{
+                      id: g.seller.id,
+                      nombre: g.seller.nombre,
+                      avatar_url: g.seller.avatar_url,
+                      nivel: g.seller.nivel,
+                    }}
+                    rating={g.rating}
+                    total_reviews={g.total_reviews}
+                    dias_entrega_min={g.dias_entrega_min}
+                    created_at={g.created_at}
+                  />
                 ))}
               </div>
             ) : (
-              <div className="text-center py-12 bg-dark-500/30 rounded-2xl border border-gray-light">
+              <div className="text-center py-12 bg-white rounded-2xl border border-gray-light">
                 <h3 className="text-2xl font-semibold text-text-light mb-3">{t('emptyFeatured.title')}</h3>
                 <p className="text-text-soft max-w-2xl mx-auto">{tCommon('statuses.featuredDescription')}</p>
               </div>
@@ -78,7 +98,7 @@ export default function Home({ featuredProducts }: HomeProps) {
         </section>
 
         {/* How It Works Section */}
-        <section className="py-20 bg-dark-500">
+        <section className="py-20 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-16">
               <h2 className="text-3xl md:text-4xl font-bold text-text-light mb-4">
@@ -123,22 +143,22 @@ export default function Home({ featuredProducts }: HomeProps) {
         </section>
 
         {/* CTA Section */}
-        <section className="py-20 bg-gradient-hubmex">
+        <section className="py-20 bg-primary">
           <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
-            <h2 className="text-3xl md:text-4xl font-bold text-dark mb-6">{t('cta.title')}</h2>
-            <p className="text-xl text-dark mb-8 opacity-90">{t('cta.description')}</p>
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">{t('cta.title')}</h2>
+            <p className="text-xl text-white mb-8 opacity-90">{t('cta.description')}</p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
                 href="/publish"
                 locale={locale}
-                className="bg-dark-500 text-primary hover:bg-gray-800 font-medium py-3 px-8 rounded-lg transition-colors duration-200"
+                className="bg-white text-primary hover:bg-gray-100 font-medium py-3 px-8 rounded-lg transition-colors"
               >
                 {tCommon('buttons.publishProduct')}
               </Link>
               <Link
                 href="/explore"
                 locale={locale}
-                className="border-2 border-dark-500 text-dark-500 hover:bg-dark-500 hover:text-primary font-medium py-3 px-8 rounded-lg transition-all duration-200"
+                className="border-2 border-white text-white hover:bg-white hover:text-primary font-medium py-3 px-8 rounded-lg transition-all"
               >
                 {tCommon('buttons.exploreOpportunities')}
               </Link>
@@ -154,18 +174,11 @@ export default function Home({ featuredProducts }: HomeProps) {
 }
 
 export async function getStaticProps({ locale }: GetStaticPropsContext) {
-  const result = await getFeaturedListingsForCards(6);
   const translations = await loadTranslations(locale, ['common', 'home']);
-
-  if (!result.success) {
-    console.error('❌ Error cargando destacados para la página principal:', result.error);
-  }
-
   return {
     props: {
-      featuredProducts: result.success && result.data ? result.data : [],
+      featuredProducts: listGigs().slice(0, 6),
       translations,
     },
-    revalidate: 300,
   };
 }

@@ -57,9 +57,19 @@ export default function RegisterPage() {
       const result = await signUp(signUpData);
 
       if (!result.success) {
-        setError(result.error || 'Error al crear la cuenta');
+        // Mostrar error específico al usuario
+        const errorMessage = result.error || 'Error al crear la cuenta';
+        setError(errorMessage);
+        console.error('Error en registro:', errorMessage);
+      } else {
+        // Registro exitoso - redirigir después de un pequeño delay para mostrar mensaje
+        console.log('✅ Registro exitoso, redirigiendo...');
+        // El AuthContext manejará la redirección automáticamente
+        // Dar tiempo para que se cree la sesión
+        setTimeout(() => {
+          router.push('/dashboard');
+        }, 500);
       }
-      // Si success, el AuthContext ya redirige a /dashboard
     } catch (err: any) {
       setError(err.message || 'Error inesperado');
     } finally {

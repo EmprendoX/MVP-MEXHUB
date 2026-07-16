@@ -96,29 +96,69 @@ export async function signUp(data: SignUpData): Promise<AuthResponse> {
       avatar_url: null, // Se sube después desde el dashboard
     };
 
+    console.log('📝 Intentando crear perfil en public.users con ID:', authData.user.id);
     const { data: profileData, error: profileError } = await supabase
       .from('users')
       .insert(userProfile)
       .select()
       .single();
 
-    const profileId = profileData?.id;
-
     if (profileError) {
-      console.error('❌ Error creando perfil en public.users:', profileError.message);
+      console.error('❌ Error creando perfil en public.users:', {
+        message: profileError.message,
+        code: profileError.code,
+        details: profileError.details,
+        hint: profileError.hint
+      });
+      
+      // Intentar eliminar el usuario de auth si falló la creación del perfil
+      // para evitar usuarios huérfanos (opcional, puede comentarse si no se quiere)
+      try {
+        // Nota: Esto requiere permisos especiales, puede no funcionar desde el cliente
+        console.warn('⚠️ Usuario de auth creado pero perfil falló. Usuario ID:', authData.user.id);
+      } catch (cleanupError) {
+        console.error('❌ No se pudo limpiar usuario huérfano:', cleanupError);
+      }
+      
+      // Retornar error descriptivo
+      let errorMessage = 'Error al crear el perfil del usuario.';
+      
+      // Mensajes más específicos según el tipo de error
+      if (profileError.code === '23505') {
+        errorMessage = 'El email ya está registrado en el sistema.';
+      } else if (profileError.code === '23503') {
+        errorMessage = 'Error de referencia en la base de datos. Contacta al administrador.';
+      } else if (profileError.code === '42501') {
+        errorMessage = 'Error de permisos. Verifica la configuración de la base de datos.';
+      } else if (profileError.message) {
+        errorMessage = `Error al crear perfil: ${profileError.message}`;
+      }
       
       return {
         success: false,
-        error: 'Error al crear el perfil. Por favor, intenta de nuevo.',
+        error: errorMessage,
       };
     }
 
-    console.log('✅ Usuario registrado exitosamente:', authData.user.email);
+    // Verificar que el perfil se creó exitosamente
+    if (!profileData || !profileData.id) {
+      console.error('❌ Perfil creado pero datos no retornados correctamente');
+      return {
+        success: false,
+        error: 'Error: El perfil se creó pero no se pudo verificar. Por favor, intenta iniciar sesión.',
+      };
+    }
+
+    console.log('✅ Usuario y perfil registrados exitosamente:', {
+      email: authData.user.email,
+      userId: authData.user.id,
+      profileId: profileData.id
+    });
 
     return {
       success: true,
       user: authData.user,
-      profileId: profileId, // Nuevo campo
+      profileId: profileData.id,
     };
   } catch (error: any) {
     console.error('❌ Error inesperado en signUp:', error);
@@ -305,7 +345,12 @@ export async function getUserProfile(userId: string) {
     console.log('🔍 No encontrado por ID, buscando por email...');
     const { data: userData } = await supabase.auth.getUser();
     
-    if (userData?.user?.email) {
+    if (!userData?.user) {
+      console.error('❌ No hay usuario autenticado');
+      return null;
+    }
+
+    if (userData.user.email) {
       const { data: emailData, error: emailError } = await supabase
         .from('users')
         .select('*')
@@ -318,7 +363,50 @@ export async function getUserProfile(userId: string) {
       }
     }
 
-    console.error('❌ Perfil no encontrado ni por ID ni por email');
+    // Si no existe el perfil pero el usuario está autenticado, intentar crearlo automáticamente
+    console.warn('⚠️ Perfil no encontrado. Intentando crear perfil automáticamente...');
+    
+    if (userData.user.id === userId && userData.user.email) {
+      // Obtener metadata del usuario de auth para crear el perfil
+      const userMetadata = userData.user.user_metadata || {};
+      
+      // Crear perfil mínimo basado en metadata de auth
+      const autoProfile: UserInsert = {
+        id: userId,
+        nombre: userMetadata.nombre || userMetadata.full_name || userData.user.email.split('@')[0],
+        email: userData.user.email,
+        tipo: userMetadata.tipo || 'comprador', // Default a comprador si no se especifica
+        ubicacion: userMetadata.ubicacion || null,
+        telefono: userMetadata.telefono || null,
+        website: userMetadata.website || null,
+        descripcion: userMetadata.descripcion || null,
+        avatar_url: userMetadata.avatar_url || null,
+      };
+
+      console.log('📝 Creando perfil automáticamente:', autoProfile);
+      
+      const { data: newProfile, error: createError } = await supabase
+        .from('users')
+        .insert(autoProfile)
+        .select()
+        .single();
+
+      if (createError) {
+        console.error('❌ Error creando perfil automáticamente:', {
+          message: createError.message,
+          code: createError.code,
+          details: createError.details
+        });
+        return null;
+      }
+
+      if (newProfile) {
+        console.log('✅ Perfil creado automáticamente:', newProfile);
+        return newProfile;
+      }
+    }
+
+    console.error('❌ Perfil no encontrado ni por ID ni por email, y no se pudo crear automáticamente');
     return null;
   } catch (error: any) {
     console.error('❌ Error inesperado en getUserProfile:', error);

@@ -16,6 +16,7 @@ const Navbar = () => {
       { name: t('navigation.home'), href: '/' },
       { name: t('navigation.explore'), href: '/explore' },
       { name: t('navigation.publish'), href: '/publish' },
+      { name: 'Órdenes', href: '/orders' },
       { name: t('navigation.messages'), href: '/messages' },
       { name: t('navigation.dashboard'), href: '/dashboard' },
     ],
@@ -60,7 +61,7 @@ const Navbar = () => {
   );
 
   return (
-    <nav className="bg-dark-500 border-b border-gray-light sticky top-0 z-50">
+    <nav className="bg-white border-b border-gray-light sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
@@ -123,7 +124,7 @@ const Navbar = () => {
             <div className="relative">
               <button className="flex items-center text-text-soft hover:text-text-light transition-colors duration-200">
                 <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-                  <span className="text-dark text-sm font-medium">U</span>
+                  <span className="text-white text-sm font-medium">U</span>
                 </div>
               </button>
             </div>
@@ -210,7 +211,7 @@ const Navbar = () => {
             <div className="border-t border-gray-light pt-3 mt-3">
               <div className="flex items-center px-3 py-2">
                 <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center mr-3">
-                  <span className="text-dark text-sm font-medium">U</span>
+                  <span className="text-white text-sm font-medium">U</span>
                 </div>
                 <div>
                   <p className="text-text-light text-sm font-medium">{t('navbar.userDemo')}</p>

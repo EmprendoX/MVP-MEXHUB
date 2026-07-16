@@ -6,6 +6,7 @@
  */
 
 import { supabase } from '@/lib/supabaseClient';
+import { getUserProfile } from '@/lib/api/auth';
 import type { Message, MessageInsert, User } from '@/types/supabase';
 
 // =========================================================================
@@ -55,6 +56,26 @@ export async function createMessage(
       return {
         success: false,
         error: 'Usuario no autenticado',
+      };
+    }
+
+    // Verificar que el usuario tiene perfil en public.users
+    const userProfile = await getUserProfile(user.id);
+    if (!userProfile) {
+      console.error('❌ Usuario no tiene perfil en public.users. ID:', user.id);
+      return {
+        success: false,
+        error: 'Tu perfil de usuario no está completo. Por favor, completa tu registro primero.',
+      };
+    }
+
+    // Verificar que el receptor también tiene perfil
+    const receiverProfile = await getUserProfile(messageData.receiver_id);
+    if (!receiverProfile) {
+      console.error('❌ Receptor no tiene perfil en public.users. ID:', messageData.receiver_id);
+      return {
+        success: false,
+        error: 'El usuario receptor no tiene un perfil válido.',
       };
     }
 
@@ -112,24 +133,56 @@ export async function getConversationMessages(
       };
     }
 
-    const { data, error } = await supabase
+    // Query corregida: obtener mensajes de la conversación entre dos usuarios específicos
+    // Hacer dos queries para asegurar que funcione correctamente con PostgREST
+    // Caso 1: Usuario actual es sender, otro usuario es receiver
+    const { data: data1, error: error1 } = await supabase
       .from('messages')
       .select('*')
-      .or(`and(sender_id.eq.${user.id},receiver_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},receiver_id.eq.${user.id})`)
+      .eq('sender_id', user.id)
+      .eq('receiver_id', otherUserId)
       .order('created_at', { ascending: true })
       .limit(limit);
-
-    if (error) {
-      console.error('❌ Error obteniendo mensajes:', error.message);
+    
+    if (error1) {
+      console.error('❌ Error obteniendo mensajes (caso 1):', error1.message);
       return {
         success: false,
-        error: error.message,
+        error: error1.message,
       };
     }
 
+    // Caso 2: Otro usuario es sender, usuario actual es receiver
+    const { data: data2, error: error2 } = await supabase
+      .from('messages')
+      .select('*')
+      .eq('sender_id', otherUserId)
+      .eq('receiver_id', user.id)
+      .order('created_at', { ascending: true })
+      .limit(limit);
+    
+    if (error2) {
+      console.error('❌ Error obteniendo mensajes (caso 2):', error2.message);
+      return {
+        success: false,
+        error: error2.message,
+      };
+    }
+
+    // Combinar resultados y ordenar por fecha
+    const allMessages = [...(data1 || []), ...(data2 || [])];
+    const uniqueMessages = allMessages.filter((msg, index, self) =>
+      index === self.findIndex(m => m.id === msg.id)
+    );
+    
+    // Ordenar por fecha ascendente y limitar
+    const sortedMessages = uniqueMessages
+      .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+      .slice(0, limit);
+
     return {
       success: true,
-      data: data || [],
+      data: sortedMessages,
     };
   } catch (error: any) {
     console.error('❌ Error inesperado en getConversationMessages:', error);
@@ -255,9 +308,10 @@ export function subscribeToMessages(
   otherUserId: string,
   callback: (message: Message) => void
 ): () => void {
-  let subscription: any = null;
+  let channel: ReturnType<typeof supabase.channel> | null = null;
+  let isUnsubscribed = false;
   
-  // Obtener usuario de forma síncrona desde la sesión actual
+  // Obtener usuario de forma asíncrona y crear suscripción
   supabase.auth.getSession().then(({ data: { session } }) => {
     const user = session?.user;
     
@@ -266,27 +320,61 @@ export function subscribeToMessages(
       return;
     }
 
-    subscription = supabase
-      .channel(`messages:${otherUserId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'messages',
-          filter: `or(and(sender_id.eq.${user.id},receiver_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},receiver_id.eq.${user.id}))`
-        },
-        (payload) => {
-          console.log('Nuevo mensaje recibido:', payload.new);
-          callback(payload.new as Message);
-        }
-      )
-      .subscribe();
+    if (isUnsubscribed) {
+      // Si ya se canceló la suscripción, no crear el channel
+      return;
+    }
+
+    // Crear channel con nombre único
+    const channelName = `messages:${user.id}:${otherUserId}`;
+    channel = supabase.channel(channelName);
+
+    // Suscribirse a mensajes donde el usuario actual es sender y otro es receiver
+    channel = channel.on(
+      'postgres_changes',
+      {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'messages',
+        filter: `sender_id=eq.${user.id},receiver_id=eq.${otherUserId}`
+      },
+      (payload) => {
+        console.log('Nuevo mensaje recibido (caso 1):', payload.new);
+        callback(payload.new as Message);
+      }
+    );
+
+    // Suscribirse a mensajes donde otro usuario es sender y usuario actual es receiver
+    channel = channel.on(
+      'postgres_changes',
+      {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'messages',
+        filter: `sender_id=eq.${otherUserId},receiver_id=eq.${user.id}`
+      },
+      (payload) => {
+        console.log('Nuevo mensaje recibido (caso 2):', payload.new);
+        callback(payload.new as Message);
+      }
+    );
+
+    // Suscribirse al channel
+    channel.subscribe((status) => {
+      if (status === 'SUBSCRIBED') {
+        console.log(`✅ Suscrito a mensajes con ${otherUserId}`);
+      } else if (status === 'CHANNEL_ERROR') {
+        console.error('❌ Error en suscripción de mensajes');
+      }
+    });
   });
 
+  // Retornar función de cleanup
   return () => {
-    if (subscription) {
-      subscription.unsubscribe();
+    isUnsubscribed = true;
+    if (channel) {
+      supabase.removeChannel(channel);
+      console.log(`🔌 Suscripción de mensajes cancelada para ${otherUserId}`);
     }
   };
 }
@@ -297,9 +385,10 @@ export function subscribeToMessages(
  * @returns Función para cancelar la suscripción
  */
 export function subscribeToNewConversations(callback: () => void): () => void {
-  let subscription: any = null;
+  let channel: ReturnType<typeof supabase.channel> | null = null;
+  let isUnsubscribed = false;
   
-  // Obtener usuario de forma síncrona desde la sesión actual
+  // Obtener usuario de forma asíncrona y crear suscripción
   supabase.auth.getSession().then(({ data: { session } }) => {
     const user = session?.user;
     
@@ -308,27 +397,46 @@ export function subscribeToNewConversations(callback: () => void): () => void {
       return;
     }
 
-    subscription = supabase
-      .channel('new_conversations')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'messages',
-          filter: `receiver_id.eq.${user.id}`
-        },
-        (payload) => {
-          console.log('Nueva conversación iniciada:', payload.new);
-          callback();
-        }
-      )
-      .subscribe();
+    if (isUnsubscribed) {
+      // Si ya se canceló la suscripción, no crear el channel
+      return;
+    }
+
+    // Crear channel con nombre único por usuario
+    const channelName = `new_conversations:${user.id}`;
+    channel = supabase.channel(channelName);
+
+    // Suscribirse a nuevos mensajes donde el usuario actual es el receiver
+    channel = channel.on(
+      'postgres_changes',
+      {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'messages',
+        filter: `receiver_id=eq.${user.id}`
+      },
+      (payload) => {
+        console.log('Nueva conversación iniciada:', payload.new);
+        callback();
+      }
+    );
+
+    // Suscribirse al channel
+    channel.subscribe((status) => {
+      if (status === 'SUBSCRIBED') {
+        console.log('✅ Suscrito a nuevas conversaciones');
+      } else if (status === 'CHANNEL_ERROR') {
+        console.error('❌ Error en suscripción de nuevas conversaciones');
+      }
+    });
   });
 
+  // Retornar función de cleanup
   return () => {
-    if (subscription) {
-      subscription.unsubscribe();
+    isUnsubscribed = true;
+    if (channel) {
+      supabase.removeChannel(channel);
+      console.log('🔌 Suscripción de nuevas conversaciones cancelada');
     }
   };
 }

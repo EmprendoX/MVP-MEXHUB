@@ -67,7 +67,7 @@ const Footer = () => {
   };
 
   return (
-    <footer className="bg-dark-500 border-t border-gray-light">
+    <footer className="bg-dark-800 border-t border-dark-900 text-text-soft">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
           {/* Brand Section */}
@@ -94,11 +94,11 @@ const Footer = () => {
 
           {/* Navigation Links */}
           <div>
-            <h3 className="text-text-light font-semibold mb-4">{t('footer.navigation')}</h3>
+            <h3 className="text-white font-semibold mb-4">{t('footer.navigation')}</h3>
             <ul className="space-y-3">
               {navigationLinks.map((link) => (
                 <li key={link.href}>
-                  <Link href={link.href} locale={locale} className="text-text-soft hover:text-text-light transition-colors duration-200">
+                  <Link href={link.href} locale={locale} className="text-text-soft hover:text-white transition-colors duration-200">
                     {link.name}
                   </Link>
                 </li>
@@ -108,11 +108,11 @@ const Footer = () => {
 
           {/* Company Links */}
           <div>
-            <h3 className="text-text-light font-semibold mb-4">{t('footer.company')}</h3>
+            <h3 className="text-white font-semibold mb-4">{t('footer.company')}</h3>
             <ul className="space-y-3">
               {companyLinks.map((link) => (
                 <li key={link.href}>
-                  <Link href={link.href} locale={locale} className="text-text-soft hover:text-text-light transition-colors duration-200">
+                  <Link href={link.href} locale={locale} className="text-text-soft hover:text-white transition-colors duration-200">
                     {link.name}
                   </Link>
                 </li>
@@ -122,11 +122,11 @@ const Footer = () => {
 
           {/* Support Links */}
           <div>
-            <h3 className="text-text-light font-semibold mb-4">{t('footer.support')}</h3>
+            <h3 className="text-white font-semibold mb-4">{t('footer.support')}</h3>
             <ul className="space-y-3">
               {supportLinks.map((link) => (
                 <li key={link.href}>
-                  <Link href={link.href} locale={locale} className="text-text-soft hover:text-text-light transition-colors duration-200">
+                  <Link href={link.href} locale={locale} className="text-text-soft hover:text-white transition-colors duration-200">
                     {link.name}
                   </Link>
                 </li>
@@ -136,13 +136,13 @@ const Footer = () => {
         </div>
 
         {/* Bottom Section */}
-        <div className="mt-12 pt-8 border-t border-gray-light">
+        <div className="mt-12 pt-8 border-t border-white/10">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             {/* Legal Links */}
             <div className="flex flex-wrap justify-center md:justify-start space-x-6">
               {legalLinks.map((link, index) => (
                 <div key={link.href} className="flex items-center">
-                  <Link href={link.href} locale={locale} className="text-text-soft hover:text-text-light transition-colors duration-200 text-sm">
+                  <Link href={link.href} locale={locale} className="text-text-soft hover:text-white transition-colors duration-200 text-sm">
                     {link.name}
                   </Link>
                   {index < legalLinks.length - 1 && <span className="mx-3 text-text-soft">•</span>}
@@ -158,7 +158,7 @@ const Footer = () => {
         </div>
 
         {/* Additional Info */}
-        <div className="mt-8 pt-8 border-t border-gray-light">
+        <div className="mt-8 pt-8 border-t border-white/10">
           <div className="text-center text-text-soft text-sm">
             <p className="mb-2">
               <strong>{t('footer.madeInMexico')}</strong> {t('footer.tagline')}
